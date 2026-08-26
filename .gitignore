@@ -1,6 +1,6 @@
 __pycache__/
 saved_models/
-datasets/
+blink_format/
 .vscode/
 venv/
 data_venv/
