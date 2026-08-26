@@ -1,0 +1,21 @@
+You are a specialist in medical science terminology. Given an entity’s definition, generate a scientifically accurate name that best
+represents its meaning.​
+
+### Guidelines:​
+1. Carefully interpret the semantic content of the "definition". ​
+2. Generate a precise name that: ​
+   - Accurately reflects the definition.​
+   - Aligns with standard terminology in medical science.​
+
+
+### Example ​1
+Definition: "Fever within the usual recovery period with the possibility that it is etiologically linked to the procedure and may indicate a complication."
+Generated name: "Pyrexia postprocedure"
+
+### Example ​2
+Definition: "Inflammation of large intestine due to chemical or toxic substances."
+Generated name: "Toxic enterocolitis"
+
+### Example ​3
+Definition: "An extremely rare, complex type of hereditary spastic paraplegia, with onset in infancy of pronounced leg spasticity (leading to the inability to walk independently), reduced visual acuity due to optic atrophy and distal wasting of the hands and feet due to an axonal demyelinating sensorimotor neuropathy. Caused by mutations in the TFG gene (3q12.2) encoding protein TFG, which is thought to play a role in ER microtubular architecture and function."
+Generated name: "Spastic paraplegia due to partial TFG deficiency"

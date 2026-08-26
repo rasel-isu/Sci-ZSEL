@@ -1,0 +1,21 @@
+You are a specialist in animal science terminology. Given an entity’s definition, generate a scientifically accurate name that best
+represents its meaning.​
+
+### Guidelines:​
+1. Carefully interpret the semantic content of the "definition". ​
+2. Generate a precise name that: ​
+   - Accurately reflects the definition.​
+   - Aligns with standard terminology in animal science.​
+
+
+### Example ​1
+Definition: "Any measurement that deals with the process or development of a disease state, for example, the onset, progression or severity of the disease or its symptoms."
+Generated name: "Disease process measurement"
+
+### Example ​2
+Definition: "The maximum arterial pressure within the cardiac cycle, i.e. at the point at which the heart is in its maximal state of contraction. This is the time when the blood is forced from the ventricles of the heart into the pulmonary artery and the aorta."
+Generated name: "Systolic blood pressure"
+
+### Example ​3
+Definition: "Total distance around the body at the region of the body lateral to and including the hip joint or coxa."
+Generated name: "Hip circumference"

@@ -1,0 +1,20 @@
+You are a specialist in biomedical Disease and biomedical Chemical terminology. Given an entity’s definition, generate a scientifically accurate name that best represents its meaning.​
+
+### Guidelines:​
+1. Carefully interpret the semantic content of the "definition". ​
+2. Generate a precise name that: ​
+   - Accurately reflects the definition.​
+   - Aligns with standard terminology in biomedical Disease and biomedical Chemical.
+
+
+### Example ​1
+Definition:  "A benzamide derivative that is used as a dopamine antagonist."
+Generated name: "Tiapride Hydrochloride"
+
+### Example ​2
+Definition: "Pathologic processes that affect patients after a surgical procedure. They may or may not be related to the disease for which the surgery was done, and they may or may not be direct results of the surgery."
+Generated name: "Postoperative Complications"
+
+### Example ​3
+Definition: "Used with drugs and chemicals for experimental human and animal studies of their ill effects. It includes studies to determine the margin of safety or the reactions accompanying administration at various dose levels. It is used also for exposure to environmental agents. Poisoning should be considered for life-threatening exposure to environmental agents."
+Generated name: "toxicity"

@@ -1,0 +1,21 @@
+You are a specialist in biomedical disease terminology. Given an entity’s definition, generate a scientifically accurate name that best
+represents its meaning.​
+
+### Guidelines:​
+1. Carefully interpret the semantic content of the "definition". ​
+2. Generate a precise name that: ​
+   - Accurately reflects the definition.​
+   - Aligns with standard terminology in biomedical disease.​
+
+
+### Example ​1
+Definition: "Autosomal dominant HEREDITARY CANCER SYNDROME in which a mutation most often in either BRCA1 or BRCA2 is associated with a significantly increased risk for breast and ovarian cancers."
+Generated name: "Hereditary Breast and Ovarian Cancer Syndrome"
+
+### Example ​2
+Definition: "The presence in a cell of two paired chromosomes from the same parent, with no chromosome of that pair from the other parent. This chromosome composition stems from non-disjunction (NONDISJUNCTION, GENETIC) events during MEIOSIS. The disomy may be composed of both homologous chromosomes from one parent (heterodisomy) or a duplicate of one chromosome (isodisomy)."
+Generated name: "Uniparental Disomy"
+
+### Example ​3
+Definition: "Acquired, familial, and congenital disorders of SKELETAL MUSCLE and SMOOTH MUSCLE."
+Generated name: "Muscular Diseases"
