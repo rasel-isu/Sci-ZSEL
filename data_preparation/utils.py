@@ -5,6 +5,7 @@ import random
 import re
 import io
 from tqdm import tqdm
+from sentence_transformers import util
 
 with open('../config.json') as f:
     CONFIG = json.load(f)
@@ -430,7 +431,13 @@ def get_term_similarity(model, term_1, term_2, word_overlap=False):
     if word_overlap:
         return get_word_overlap_count(term_1, term_2)
     else:
-        sim_score = round(model.similarity(model.encode(term_1), model.encode(term_2)).item(), 2)
+        
+        # sim_score = round(model.similarity(model.encode(term_1), model.encode(term_2)).item(), 2)
+
+        
+        emb1 = model.encode(term_1, convert_to_tensor=True)
+        emb2 = model.encode(term_2, convert_to_tensor=True)
+        sim_score = round(util.cos_sim(emb1, emb2).item(), 2)
         return sim_score
     
 def does_ent_sim_smaller_than_its_parent_child_or_threshhold(model, item_id, relations, kb, kb_prime_def_m, ent_prime):

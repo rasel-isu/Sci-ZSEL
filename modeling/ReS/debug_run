@@ -1,0 +1,7 @@
+eval $(/lustre/hdd/LAS/qli-lab/rasel/apps/miniconda3/bin/conda shell.bash hook)
+source /lustre/hdd/LAS/qli-lab/rasel/apps/miniconda3/etc/profile.d/conda.sh
+conda activate /lustre/hdd/LAS/qli-lab/rasel/graphrag/related_work/Read-and-Select/conda_env
+
+python -m debugpy --listen 0.0.0.0:5677 --wait-for-client /lustre/hdd/LAS/qli-lab/rasel/graphrag/related_work/Read-and-Select/train_and_eval.py
+
+# conda activate /lustre/hdd/LAS/qli-lab/rasel/graphrag/related_work/BLINK/conda_data_env
