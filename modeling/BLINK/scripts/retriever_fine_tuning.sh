@@ -9,9 +9,9 @@ SPLITNAME="train"
 
 EXP_LIST=(
     # "(m1_e1)U(m3_e1)_multi_primeU(m4_e2)_multi_prime"
-    # "(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e"
+    "(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e"
     # "synonym"
-    "synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e"
+    # "synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e"
 )
 ONTO_LIST=("ncbi_disease")
 VARIANT=(
@@ -20,7 +20,7 @@ VARIANT=(
   "add_prch_in_pos_list"
 )
 SEEDS=(0)
-TRAIN_BATCH_SIZE=512
+TRAIN_BATCH_SIZE=64
 EPOCH=1
 TIME_START=$(date +%s)
 START_TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')

@@ -1,62 +1,19 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-#
-from copy import deepcopy
+
 import os
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from collections import OrderedDict
-from tqdm import tqdm
-# from pytorch_transformers.modeling_utils import CONFIG_NAME, WEIGHTS_NAME
-
-# from pytorch_transformers.modeling_bert import (
-#     BertPreTrainedModel,
-#     BertConfig,
-#     BertModel,
-# )
-
-# from pytorch_transformers.modeling_roberta import (
-#     RobertaConfig,
-#     RobertaModel,
-# )
-
-# from pytorch_transformers.tokenization_bert import BertTokenizer
-# from pytorch_transformers.tokenization_roberta import RobertaTokenizer
-# nhat
 from transformers.utils import WEIGHTS_NAME, CONFIG_NAME 
-
-
-from transformers import (
-    BertPreTrainedModel,
-    BertConfig,
-    BertModel,
-)
-
-from transformers import (
-    RobertaConfig,
-    RobertaModel,
-)
-
+from transformers import (BertModel)
+from transformers import (RobertaModel)
 from transformers import BertTokenizer, RobertaTokenizer
-# nhat
-
 from blink.common.ranker_base import BertEncoder, get_model_obj
 from blink.common.optimizer import get_bert_optimizer
 from blink.common.params import ENT_START_TAG, ENT_END_TAG, ENT_TITLE_TAG
-from data_preparation.utils import debug_find_problematic_sample, see_candidates_and_labels
-# os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 def load_crossencoder(params):
-    # Init model
     crossencoder = CrossEncoderRanker(params)
     return crossencoder
-
 
 class CrossEncoderModule(torch.nn.Module):
     def __init__(self, params, tokenizer):
@@ -231,7 +188,6 @@ class CrossEncoderRanker(torch.nn.Module):
                 return loss, scores
         else:
             scores = self.score_candidate(input_idx, context_len)
-            # rasel
             if label_input_gt is not None:
                 new_scores, new_labels = self.get_loss_after_removing_gt_from_neg(scores, label_input, label_input_gt)
                 loss = F.cross_entropy(new_scores, new_labels, reduction="mean")
@@ -239,56 +195,13 @@ class CrossEncoderRanker(torch.nn.Module):
             else:
                 loss = F.cross_entropy(scores, label_input, reduction="mean")
                 return loss, scores
-            
-                # rasel
-                # print(loss)
-                # input('stop:')
-                # print(scores.shape)
-                # new_scores, new_labels = self.select_neg_sample(scores, label_input, 20)
-                # new_scores, new_labels = self.select_ranged_neg_sample(scores, label_input)
-                # scores = new_scores
-
-                # print(new_scores.shape)
-
-
-                #get loss from n negatives
-                # loss = F.cross_entropy(new_scores, new_labels, reduction="mean") 
-
-                # # get loss from n negatives & label_smoothing
-                # loss = F.cross_entropy(new_scores, new_labels, reduction="mean",label_smoothing=0.2) 
-
-                # # get loss from n negatives & Global down-weighting
-                # pseudo_weight = 0.5
-                # loss = F.cross_entropy(new_scores, new_labels, reduction="mean")
-                # loss = pseudo_weight * loss
-
-                # # Symmetric Cross Entropy
-                # loss = self.symmetric_cross_entropy(new_scores, new_labels, alpha=0.1, beta=1.0)
-
-                # triplet_loss_fn = TripletLossWithHardNegatives(margin=0.5)
-                # loss = triplet_loss_fn(new_scores, new_labels)
 
                 if ranking_loss_fn is not None:
                     loss = ranking_loss_fn(new_scores, new_labels)
-                    # input('stop:')
                 else:
 
                     loss = F.cross_entropy(new_scores, new_labels, reduction="mean") 
-                    # loss = F.cross_entropy(new_scores, new_labels, reduction="mean", label_smoothing=0.1)
-                    # input('stop:')
 
-                    # if self.params['cross_enc_negative_selection'] == 'bienc_20_neg_and_prnt_chld_as_neg':
-                    #     return loss+conn_final_loss, scores
-
-
-            
-            # if self.params['cross_enc_negative_selection'] == 'bienc_20_neg_and_prnt_chld_as_neg':
-            #     prnt_chld_weight = 1.0
-            #     bienc_weight = 1.0
-            #     if graph_candidates:
-            #         loss = prnt_chld_weight * prnt_cld_loss + bienc_weight * loss
-            #     # input('s')
-                
             
             return loss, scores
         
@@ -312,7 +225,7 @@ class CrossEncoderRanker(torch.nn.Module):
             new_label_position = (perm == label_position).nonzero(as_tuple=True)[0].item() # Find new position of label (originally at index 0 before shuffle)
             input_idx_list.append(selected_cands)
             label_list.append(new_label_position)
-        # output_idx = torch.stack(input_idx_list)
+
         new_labels = torch.tensor(label_list, device=self.device)
         return input_idx_list, new_labels
         
@@ -743,14 +656,14 @@ class CrossEncoderRanker(torch.nn.Module):
                 f.write(
                     f'peseudo label: {true_idx}, GT : {gt_idx} --> new label : {new_true}\nnew_score\n{new_score.tolist()}\n{scores[i].tolist()}\nold_score\n'
                 )
-            # input('kkk')
+
             new_scores_list.append(new_score)
             new_labels_list.append(new_true)
         new_scores = torch.cat(new_scores_list, dim=0)
         new_labels = torch.tensor(new_labels_list, device=device, dtype=dtype)
         return new_scores, new_labels
 
-    # rasel
+
     def select_neg_sample(self,scores, label_input, num_negatives):
         assert scores.dim() == 2, "scores must be [batch, num_candidates]"
         assert label_input.dim() == 1 and label_input.size(0) == scores.size(0), "label_input must be [batch]"

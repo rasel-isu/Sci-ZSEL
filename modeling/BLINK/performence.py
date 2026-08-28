@@ -167,22 +167,6 @@ def get_cand_info(cross_pred, kb_dict, id_map):
 
 def get_reranker_cands(bi_pred, cross_pred, kb_dict, id_map):
     return get_cand_info(cross_pred, kb_dict, id_map)
-    # if 'gt' in bi_pred['retriever_retrived_gt']:
-    #     ret_gt = bi_pred['retriever_retrived_gt']['gt']
-    # else:
-    #     ret_gt = bi_pred['retriever_retrived_gt']
-
-    # rerank_gt = cross_pred['reranker_gt_rank']['gt']
-    # if ret_gt:
-    #     if rerank_gt:
-    #         if str(ret_gt)==rerank_gt:
-    #             return get_cand_info(cross_pred, kb_dict, id_map)
-    #         else:
-    #             raise ValueError('For this mention Bi and cross pred are not same!')
-    #     else:
-    #         return get_cand_info(cross_pred, kb_dict, id_map)
-    # else:
-    #     return get_cand_info(cross_pred, kb_dict, id_map)
 
 
 def evaluate_biencoder_and_crossencoder(params, bi_pfile, cross_pfile, split_name='test'):

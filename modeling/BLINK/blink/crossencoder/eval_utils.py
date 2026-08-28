@@ -1,46 +1,19 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-#
 from copy import deepcopy
 import os
-import argparse
-import pickle
 import torch
 import json
-import sys
-import io
-import random
-import time
 import numpy as np
-from utils import compare_with_multiple_gt, compare_with_multiple_gt_with_altid
 import wandb
-
-from multiprocessing.pool import ThreadPool
-
-from tqdm import tqdm, trange
-from collections import OrderedDict
-
-from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
-
+from tqdm import tqdm
+from utils import compare_with_multiple_gt, compare_with_multiple_gt_with_altid
 from transformers import get_linear_schedule_with_warmup
-
-import blink.candidate_retrieval.utils
-from blink.crossencoder.crossencoder import CrossEncoderRanker, load_crossencoder
-import logging
-
 import blink.candidate_ranking.utils as utils
-import blink.biencoder.data_process as data
-from blink.biencoder.zeshel_utils import DOC_PATH, WORLDS, world_to_id
+from blink.biencoder.zeshel_utils import WORLDS
 from blink.common.optimizer import get_bert_optimizer
-from blink.common.params import BlinkParser
 from performence import evaluate_biencoder_and_crossencoder
 
 
 logger = None
-
 
 def modify(context_input, candidate_input, max_seq_length):
     new_input = []
@@ -144,11 +117,7 @@ def get_candidate_vecs_as_crosencoder_predicts():
 def evaluate_cat_wise(params, test_set_name, output_path, 
                       reranker, 
     eval_dataloader, device, logger, context_length, zeshel=False, silent=True):
-    
-    # params = deepcopy(params)
-    # params["path_to_model"] = output_path + '/pytorch_model.bin'
-    # # params["dropout_rate"] = 0.0
-    # reranker = CrossEncoderRanker(params)
+
 
     reranker.model.eval()
     if silent:
@@ -156,18 +125,17 @@ def evaluate_cat_wise(params, test_set_name, output_path,
     else:
         iter_ = tqdm(eval_dataloader, desc="Evaluation")
 
-    # rasel
     samples_map = {}
     with open(f'{params["kb_file_path"]}') as f:
         exact_kb = json.load(f)
-        if params["onto"] == 'ncbi':
+        if params["onto"] == 'ncbi_disease':
             kb = {}
             for e in exact_kb:
                 ent = exact_kb[e]
                 kb[e] = ent
                 for i in ent['altdiseaseid']:
                     kb[i] = ent
-        elif params["onto"] in ['bc5cdr', 'cmo', 'vt', 'lpt', 'cometa']:
+        else:
             kb = deepcopy(exact_kb)
 
     with open(f'{params["raw_data_path"]}/id_map.json') as f:
@@ -193,7 +161,7 @@ def evaluate_cat_wise(params, test_set_name, output_path,
                 gt_with_mapped_id.append(gt)
             i['ground_truth'] = gt_with_mapped_id
             grag_data[i['sample_id']] = i
-    # rasel
+
     candidate_pool = torch.load(params["cand_pool_path"])
 
     results = {}
@@ -224,9 +192,9 @@ def evaluate_cat_wise(params, test_set_name, output_path,
     # to store 
 
     cnt = 0
-    # nhat
+
     total_eval_loss = 0.0
-    # nhat
+
     for step, batch in enumerate(iter_):
         if zeshel:
             src = batch[2]
@@ -237,18 +205,6 @@ def evaluate_cat_wise(params, test_set_name, output_path,
         kb_int_id = batch[2]
         sample_ids = batch[3]
 
-        
-
-        # # rasel : Check data
-        # decoded_text_context_input = ''
-        # tokenizer = reranker.tokenizer
-        # for contx in context_input:
-        #     for can in contx:
-        #         decoded_text = tokenizer.decode(can, skip_special_tokens=False)
-        #         decoded_text_context_input+= f"{decoded_text}\n\n"
-        # with open('decoded_text_context_input.txt', 'w') as f:
-        #     f.write(decoded_text_context_input + f'\n\n{kb_int_id}')
-        # #rasel
 
 
         with torch.no_grad(): 
@@ -258,12 +214,9 @@ def evaluate_cat_wise(params, test_set_name, output_path,
         logits = logits.detach().cpu().numpy()
         label_ids = label_input.cpu().numpy()
         
+        total_eval_loss += eval_loss.item() 
 
-        # nhat
-        total_eval_loss += eval_loss.item()  # nhat: accumulate eval loss
-        # nhat
 
-        # rasel
         kb_int_id = kb_int_id.cpu().numpy()
         sample_ids = sample_ids.cpu().numpy()
         if params["save_trainable_data"]:
@@ -288,7 +241,7 @@ def evaluate_cat_wise(params, test_set_name, output_path,
             if l:
                 count_linked+=1
         all_cand_score.extend(cand_score)
-        # rasel
+      
 
         tmp_eval_accuracy, eval_result = utils.accuracy(logits, label_ids)
 
@@ -303,12 +256,11 @@ def evaluate_cat_wise(params, test_set_name, output_path,
                 tot[src_w] += 1
         nb_eval_steps += 1
 
-    
-    # nhat
+
     avg_eval_loss = total_eval_loss / nb_eval_steps if nb_eval_steps > 0 else 0.0
     logger.info(f"eval_loss : {avg_eval_loss}")  
-    wandb.log({"eval_loss": avg_eval_loss})  # nhat: log to wandb
-    # nhat
+    wandb.log({"eval_loss": avg_eval_loss}) 
+
 
 
     normalized_eval_accuracy = -1
@@ -335,7 +287,6 @@ def evaluate_cat_wise(params, test_set_name, output_path,
     results["logits"] = all_logits
     results["cross_prediction"] = all_cand_score
 
-    # rasel
     os.makedirs(output_path, exist_ok=True)
     cross_pred_file = output_path+'/crossencoder_predictions.json'
     with open(cross_pred_file, 'w') as f:
@@ -375,7 +326,7 @@ def evaluate_cat_wise(params, test_set_name, output_path,
             os.makedirs(save_data_dir)
         save_data_path = os.path.join(save_data_dir, "%s.t7" % params['mode'])
         torch.save(nn_data, save_data_path)
-    # rasel
+
 
     return results
 

@@ -311,30 +311,6 @@ def compare_all_settings_hist(onto, data, save_to_dir):
     x_ticks = list(all_keys)
     y_max = max(max(d.values()) for d in data.values()) + 50
 
-    # # Plot each histogram
-    # for i, (title, count_dict) in enumerate(data.items()):
-        
-    #     ax = axes[i]
-    #     total = sum(count_dict.values())
-    #     counts = [count_dict.get(k, 0) for k in x_ticks]
-    #     bars = ax.bar(x_ticks, counts, color="#0A5693", edgecolor='black')
-
-    #     # Annotate bars with count and percentage
-    #     for bar, c in zip(bars, counts):
-    #         pct = (c / total) * 100
-    #         pct = int(round(pct, 0))
-
-    #         ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 2,
-    #                 f'{c}\n{pct}%', ha='center', va='bottom', fontsize=9)
-
-    #     ax.set_title(title, fontsize=14)
-    #     ax.set_ylim(0, y_max)
-    #     ax.set_xticks(x_ticks)
-    #     ax.set_xlabel('Hops')
-    #     ax.set_ylabel('Count')
-
-    # plt.tight_layout()
-    # plt.savefig(f"{save_to_dir}{onto}_subplots.png", dpi=500)
 
     methods = list(data.keys())
     all_labels = sorted(set(k for d in data.values() for k in d))  # all possible class labels
@@ -1003,11 +979,6 @@ def debug_find_problematic_sample(text_vecs, context_len, score_fn):
             
             # Print details about this sample
             print('error item \n\n')
-            # print(text_vecs)
-            # print(f"    Shape: {text_vecs[i].shape}")
-            # print(f"    Min: {text_vecs[i].min()}, Max: {text_vecs[i].max()}")
-            # print(f"    Has NaN: {torch.isnan(text_vecs[i]).any()}")
-            # print(f"    Has Inf: {torch.isinf(text_vecs[i]).any()}")
     
     return problematic_samples
 
