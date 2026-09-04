@@ -94,7 +94,10 @@ emit("CG_MAX_CONTEXT_LENGTH", get(cg, "max_context_length", 64))
 emit("CG_ENCODE_BATCH_SIZE", get(cg, "encode_batch_size", 8))
 emit("CG_EVAL_BATCH_SIZE", get(cg, "eval_batch_size", 32))
 emit("CG_BERT_MODEL", get(cg, "bert_model", "bert-large-uncased"))
-emit("CG_HAS_GT", str(get(cg, "has_gt", cfg.get("has_ground_truth", True))).lower())
+# params.py declares --has_gt as `type=bool`, so ANY value (including "false") parses as True;
+# the only way to turn it off is to omit the flag. Emit the whole flag, or nothing.
+emit("CG_HAS_GT_FLAG",
+     "--has_gt true" if get(cg, "has_gt", cfg.get("has_ground_truth", True)) else "")
 
 # ---- retriever fine-tuning (train_biencoder.py) ------------------------
 rt = blink.get("retriever", {})

@@ -28,4 +28,4 @@ python blink/biencoder/eval_biencoder.py \
 --save_topk_result \
 --bert_model $CG_BERT_MODEL --mode $SPLITNAME \
 --data_parallel \
---has_gt $CG_HAS_GT \
+$CG_HAS_GT_FLAG

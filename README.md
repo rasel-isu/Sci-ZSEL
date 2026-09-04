@@ -373,7 +373,7 @@ path (`../config.json` from `data_preparation/`, `../../config.json` from `model
 | `biencoder_top1_file` | Filename for the E_BT entity set. |
 | `blink.split_name` | Which split directory the BLINK scripts operate on (`train`). |
 | `blink.base_models.*` | Pretrained BLINK checkpoints, **relative to `data_preparation/`**. |
-| `blink.candidate_generation.*` | Flags for `eval_biencoder.py` (top-*k*, batch sizes, `bert_model`, `has_gt`). |
+| `blink.candidate_generation.*` | Flags for `eval_biencoder.py` (top-*k*, batch sizes, `bert_model`). `has_gt` defaults to the top-level `has_ground_truth`; when false the `--has_gt` flag is omitted entirely rather than passed as `false` — see §13. |
 | `blink.retriever.*` | Flags for `train_biencoder.py`. `exp_list` and `negative_selection` are arrays — every combination is run in turn. |
 | `blink.reranker.*` | Flags for `train_cross.py`. `exp_list` and `seeds` are arrays. |
 | `res.pretrained_model` | ReS checkpoint, **relative to `modeling/ReS/`**. |
@@ -608,8 +608,14 @@ To switch to another corpus/ontology:
    ```
 
    `has_ground_truth` must be `false` for all three QTL training corpora — their `ground_truth` is
-   empty by design, and the pseudo-label quality report is skipped rather than crashing. Use
-   `vt` / `qtl_vt` / `vt_kb.json` and `lpt` / `qtl_lpt` / `lpt_kb.json` for the other two ontologies.
+   empty by design, so pseudo-label quality reporting is skipped instead of scoring against nothing.
+   The gold test set is unaffected: `convert_grag_to_blink_format.py` always converts `test_grag.json`
+   with ground truth on. Use `vt` / `qtl_vt` / `vt_kb.json` and `lpt` / `qtl_lpt` / `lpt_kb.json` for
+   the other two ontologies.
+
+   Verified end to end on `qtl_cmo`: step 1 converts 16,385 unlabeled train mentions (placeholder
+   `label_id: -1`, used only as the retrieval pool) and 2,030 gold-labeled test mentions against the
+   4,133-entity CMO ontology.
 
 2. **Nothing to change in the shell scripts.** `scripts/load_config.sh` derives every path from the
    keys above: `KB_FILE_PATH` = `data_dir`/`kb_file`, `CANDIDATE_ENCODINGS` /
@@ -618,28 +624,47 @@ To switch to another corpus/ontology:
    hardcoded scripts conflated — needed for the QTL sets, where `world` is `cmo` but the directory
    is `qtl_cmo`.
 
-3. **Check the Python `world` switches.** A new `world` string must be handled in:
-   - `data_preparation/pseudo_pair_construction.py:199` — which ontology-relation loader to use
-   - `modeling/ReS/train_on_other_data.py:36` — how to name the KB file
-   - `modeling/BLINK/blink/{biencoder/train_biencoder.py,biencoder/eval_biencoder.py}` — the
-     `params["onto"]` branch that expands `altdiseaseid`
+3. **Two Python `world` / `kb_name` switches** must know the new value:
+   - `data_preparation/pseudo_pair_construction.py:199` — which ontology-relation loader the
+     ontology-aware filter uses. Branches on `world`: `bc5cdr`, `ncbi_disease`,
+     `['cmo','vt','lpt']`, `['cometa']`. **An unlisted `world` leaves `relations` undefined and the
+     filter crashes with `NameError`.**
+   - `modeling/ReS/train_on_other_data.py:36` — how to name the KB file. Branches on `kb_name`:
+     `medic`, `mesh`, `['cmo','vt','lpt']`. An unlisted value leaves `kb_file_path` undefined.
 
-   Known worlds are `ncbi_disease`, `bc5cdr`, `cmo`, `vt`, `lpt`, `cometa`.
+   `train_biencoder.py:236` / `eval_biencoder.py:135` also branch on `params["onto"]`, but the `kb`
+   dict they build there is dead code — nothing reads it, only `exact_kb` is passed downstream.
+   (`ncbi_disease` does not match that branch's `'ncbi'` test either, and runs fine.) You do not
+   need to add a case there.
 
 4. **Add a prompt.** `data_preparation/prompts/<world>/system.txt` and `human.txt`. `human.txt` must
    contain the `{definition}` placeholder; `system.txt` carries the domain framing and few-shot
    examples. Prompts already exist for `ncbi_disease`, `bc5cdr`, `cmo`, `vt`, `lpt`, `cometa`.
 
-5. **Delete stale ontology caches.** Remove `saved_models/<world>/*_entity_pool.t7` and
-   `*_entity_encodings.t7` before the first run for a new ontology.
+5. **Delete stale ontology caches.** The cached encodings live at
+   `<saved_model_dir>/<kb_name>_entity_encodings.t7` and `<kb_name>_entity_pool.t7` — note the
+   directory comes from `saved_model_dir` and the filename prefix from `kb_name`, so for the CMO
+   config above that is `saved_models/qtl_cmo/cmo_entity_*.t7`, not `saved_models/cmo/`. Remove
+   them before the first run against a changed ontology.
 
-**BC5CDR needs extra work.** `datasets/bc5cdr/mesh.json` ships in raw MeSH form, so:
-`synonym_key_on_ontology` must be `"synonym"`, `has_ent_alt_id` must be `false`, and the
-ontology-aware filter has no `ParentIDs` to read. Either run
-`data_preparation/utils.py::convert_kb` to produce a `synonyms`/`ParentIDs`/`altdiseaseid` version
-(then use `get_relations_from_ontology`), or supply the four MeSH relation files that
-`utils.py::get_mesh_relations` expects (`relations_{desc,pa,qual,supp}2025.json`) — they are not
-redistributed here. Also budget for encoding 355,213 entities in step 5.1.
+**BC5CDR needs extra work, and `convert_kb` is not the tool for it.** `datasets/bc5cdr/mesh.json`
+ships in raw MeSH form — dict-keyed, with `synonym` (not `synonyms`), no `altdiseaseid`, and no
+`ParentIDs`. So `synonym_key_on_ontology` must be `"synonym"` and `has_ent_alt_id` must be `false`
+(otherwise the converter raises `KeyError: 'altdiseaseid'`).
+
+`data_preparation/utils.py::convert_kb` will **not** convert it: it expects a *list* of OBO-exported
+entities and OBO-quoted synonym strings (`"foo" EXACT []`), so on `mesh.json` it fails with
+`TypeError: string indices must be integers` and, past that, `IndexError` in its synonym regex. Its
+output shape matches `cmo_kb.json`/`vt_kb.json`/`lpt_kb.json` exactly — it is the OBO→KB converter
+used to build the animal-science ontologies, not a MeSH converter.
+
+For the ontology-aware filter on BC5CDR you need the four MeSH relation files
+`relations_{desc,pa,qual,supp}2025.json`, which are not redistributed here, and
+`utils.py::get_mesh_relations` looks for them at a hardcoded `data/bc5cdr/onto/` (relative to
+`data_preparation/`, ignoring `data_dir`). The shipped `mesh.json` cannot substitute: `parent_of` is
+empty for all 355,213 entities and only 10,398 have any `is_a`. Everything upstream of the filter —
+conversion, exact-match pairs, alias generation — works without them. Also budget for encoding
+355,213 entities in step 5.1.
 
 ---
 
@@ -668,6 +693,13 @@ aggregate counts. For NCBI-Disease / MEDIC:
 
 **The two conda envs are not interchangeable.** BLINK code needs `transformers==4.31.0`, ReS needs
 `4.30.2`. Each `.sh` activates the right one; if you invoke a `.py` by hand, activate it yourself.
+
+**`--has_gt` cannot be switched off by passing `false`.** `params.py:383` declares it as
+`type=bool`, and `bool("false")` is `True` — so `--has_gt false`, `--has_gt False` and
+`--has_gt true` all mean *true*; only omitting the flag gives false. `scripts/load_config.sh`
+therefore emits the entire flag or nothing (`CG_HAS_GT_FLAG`), driven by
+`blink.candidate_generation.has_gt` (which defaults to the top-level `has_ground_truth`). Watch for
+this if you add other `type=bool` flags.
 
 **Ollama port 11435 is hard-coded in two places** — `run_ollama_to_serve_llm` (`OLLAMA_HOST`) and
 `alias_generation.py::LLMSelector.get_ollama` (`base_url`). `alias_generation.sh` polls
