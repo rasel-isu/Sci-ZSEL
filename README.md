@@ -159,29 +159,46 @@ port is taken.
 
 ## 5. Pretrained checkpoints to download
 
-Create `saved_models/` at the repo root and place three files there.
+Three checkpoints go into `saved_models/` at the repo root.
 
-**BLINK retriever + reranker** (from [facebookresearch/BLINK](https://github.com/facebookresearch/BLINK)):
+**1–2. BLINK retriever + cross-encoder** — from
+[facebookresearch/BLINK](https://github.com/facebookresearch/BLINK). Run from the repo root:
 
 ```bash
 mkdir -p saved_models
-wget -P saved_models http://dl.fbaipublicfiles.com/BLINK/biencoder_wiki_large.bin    # 2.7 GB
-wget -P saved_models http://dl.fbaipublicfiles.com/BLINK/crossencoder_wiki_large.bin # 1.3 GB
+wget -c -P saved_models http://dl.fbaipublicfiles.com/BLINK/biencoder_wiki_large.bin    # 2.7 GB
+wget -c -P saved_models http://dl.fbaipublicfiles.com/BLINK/crossencoder_wiki_large.bin # 1.3 GB
 ```
 
-**ReS zero-shot checkpoint** — `zeshel_disambiguation_attention.pt` (1.5 GB), the ZESHEL-trained
+**3. ReS zero-shot checkpoint** — `zeshel_disambiguation_attention.pt` (1.5 GB), the ZESHEL-trained
 model released by [HITsz-TMG/Read-and-Select](https://github.com/HITsz-TMG/Read-and-Select)
-(*A Read-and-Select Framework for Zero-shot Entity Linking*, Findings of EMNLP 2023). Follow that
-repository's download instructions and save it as `saved_models/zeshel_disambiguation_attention.pt`
-(the path is configurable via `config.json → res.pretrained_model`).
+(*A Read-and-Select Framework for Zero-shot Entity Linking*, Findings of EMNLP 2023).
 
-After this step:
+It is hosted on OneDrive, which refuses anonymous non-browser requests (`403`), so `wget`/`curl`
+will not work — **download it in a browser** from
+<https://1drv.ms/u/s!AoTJ9uWa69GGf3Rr-zCtO14Nvyo?e=CFWExB> (the link in that repo's
+`model_disambiguation/README.md`), then move it into place:
 
+```bash
+mv ~/Downloads/zeshel_disambiguation_attention.pt saved_models/
 ```
-saved_models/
-├── biencoder_wiki_large.bin
-├── crossencoder_wiki_large.bin
-└── zeshel_disambiguation_attention.pt
+
+If you are on a headless cluster, download it on your laptop and copy it over:
+
+```bash
+scp zeshel_disambiguation_attention.pt <user>@<host>:<path-to-repo>/saved_models/
+```
+
+Only ReS needs this file; steps 5.1–5.4 (BLINK) run without it. The path is configurable via
+`config.json → res.pretrained_model`.
+
+**Verify.** All three should be present with these sizes:
+
+```bash
+ls -l saved_models/*.bin saved_models/*.pt
+# 2681357077  biencoder_wiki_large.bin
+# 1340677176  crossencoder_wiki_large.bin
+# 1522192979  zeshel_disambiguation_attention.pt
 ```
 
 Everything else under `saved_models/` is produced by the pipeline, including the cached ontology
@@ -314,197 +331,93 @@ them in sync (see §11).
 
 ## 8. Running the pipeline
 
-All six steps below are for the shipped NCBI-Disease configuration. **Each command must be run from
-the directory shown**, because of the relative `config.json` lookup.
+Everything below is for the shipped NCBI-Disease configuration. **`cd` from the repo root each
+time** — every script reads `config.json` by a relative path and will fail from anywhere else.
 
-### Step 1 — Convert the corpus to BLINK format
+### Install
 
-```bash
+```
+bash install.sh
+```
+
+### Convert into expected data format
+
+```
 cd data_preparation
 bash grag_to_blink.sh
 ```
 
-Runs `convert_grag_to_blink_format.py`. Reads `train_grag.json` / `test_grag.json` + the ontology;
-writes `datasets/ncbi_disease/blink_format/train/original_data/` with `train.jsonl` (gold-labeled;
-used **only** as the mention pool for retrieval, never for training), `test.jsonl` (the evaluation
-set), `kb.jsonl`, `entity.jsonl`, and `id_map.json`. Mentions whose gold entity is missing from the
-ontology are skipped.
+### 5.1 Entity Selection from the Ontology
 
-### Step 2 — Entity selection, part A: bi-encoder top-*k* (paper §5.1)
-
-```bash
-cd modeling/BLINK
+```
+cd modeling/BLINK/
 bash scripts/get_biencoder_top_k.sh
 ```
 
-Runs the **off-the-shelf** BLINK bi-encoder (`biencoder_wiki_large.bin`, no fine-tuning) over the
-training mentions and saves the top-64 retrieved entities to
-`saved_models/ncbi_disease/biencoder/train/original_data/top64_candidates/train.json`.
+### 5.2 Pseudo-Pair Construction
 
-The first invocation also tokenizes and encodes the whole ontology into
-`saved_models/ncbi_disease/medic_entity_pool.t7` and `medic_entity_encodings.t7`. This is the slow
-part (13,316 MEDIC entities; hours for the 355k-entity MeSH). Both files are cached and reused by
-every later run — **delete them whenever you change the ontology**, or you will silently score
-against stale encodings.
-
-### Step 3 — Entity selection part B, alias generation, pseudo-pair construction (paper §5.1–5.2)
-
-```bash
+```
 cd data_preparation
 bash entity_selection_and_pseudo_pair_construction.sh
 ```
 
-Three sub-steps run back to back:
+### 5.3 Ontology-Aware Retriever Fine-tuning
 
-1. **`entity_selection.py`** builds the two entity sets that are worth spending LLM calls on:
-   - **E_EM** — entities whose name exactly matches some corpus mention. Also emits the
-     `(m1_e1)` exact-match pseudo-pairs. Entity set → `blink_format/train/(m1_e1)/m1_e1_unq_ents.json`.
-   - **E_BT** — entities ranked top-1 by the off-the-shelf bi-encoder in step 2. Entity set →
-     `blink_format/train/original_data/top_1_from_biencoder.json`.
-
-   Entities with an empty `def` are excluded (an LLM cannot generate an alias from nothing); a
-   `*_dont_rm_if_no_def.json` copy is written alongside for inspection. This selection is exactly
-   what makes the method cost-efficient: for NCBI-Disease it reduces 13,316 ontology entities to
-   **802 LLM calls** (169 + 633).
-
-2. **`alias_generation.sh` → `alias_generation.py`** starts the Ollama server, prompts
-   `llama3.2:3b-instruct-fp16` (temperature 0, `num_ctx=5000`) once per selected entity using
-   `prompts/<world>/{system,human}.txt`, and shuts the server down via a trap on exit. The prompt
-   asks for *all* plausible names for a definition as a comma-separated list — that is what
-   `multi_prime` refers to downstream. Outputs, per entity set:
-   - `*_newly_generated.json` — `{document_id, def, old_name, newly_generated_name}`
-   - `*_token_counts.txt` — per-entity and total token counts plus wall-clock time
-
-3. **`pseudo_pair_construction.py`** matches every corpus mention against the generated aliases and
-   builds each training set. The **ontology-aware filter** (`remove_samller_e=True`) embeds the
-   entity's own name and each of its ontology parents/children with `FremyCompany/BioLORD-2023-M`
-   and drops an alias when `sim(alias, entity_name)` is **below any neighbor's similarity, or below
-   0.9** (`utils.py::does_ent_sim_smaller_than_its_parent_child_or_threshhold`). It then merges the
-   component sets into the final training data.
-
-For NCBI-Disease this produces (line counts of `train.jsonl`):
-
-| Experiment directory | Pairs |
-|---|---|
-| `(m1_e1)` | 854 |
-| `(m3_e1)_multi_prime` | 556 |
-| `(m3_e1)_multi_prime_rm_sm_e` | 360 |
-| `(m4_e2)_multi_prime` | 1,102 |
-| `(m4_e2)_multi_prime_rm_sm_e` | 740 |
-| `(m1_e1)U(m3_e1)_multi_primeU(m4_e2)_multi_prime` (Sci-ZSEL w/o filter) | 1,736 |
-| `(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e` (**Sci-ZSEL**) | 1,299 |
-| `synonym` | 3,283 |
-| `synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e` (**Sci-ZSEL + Synonym**) | 4,582 |
-
-Each directory also gets a `cat_wise_acc.json` (pseudo-label precision per lexical-overlap category,
-when ground truth is available) and a `train_category_count.json`. See §9 for the names.
-
-### Step 4 — Retriever fine-tuning (paper §5.3)
-
-```bash
-cd modeling/BLINK
+```
+cd modeling/BLINK/
 bash scripts/retriever_fine_tuning.sh
 ```
 
-Fine-tunes `biencoder_wiki_large.bin` on the pseudo-pairs. Defaults in the script: 1 epoch,
-`--train_batch_size 64`, `--learning_rate 2e-05`, `--dropout_rate 0.2`,
-`--max_context_length 128 --max_cand_length 128 --max_seq_length 192`, `--seed 0`,
-`--bi_enc_negative_selection add_prch_in_pos_list` (scores against the entire KB, and treats the
-gold entity's ontology parents and children — but not siblings — as additional positives).
+### 5.4 Reranker Fine-tuning
 
-Select which pseudo-pair set to train on by editing `EXP_LIST` at the top of the script; the other
-variants are already listed and commented out. `ONTO_LIST`, `SEEDS`, `EPOCH` and
-`TRAIN_BATCH_SIZE` are in the same block.
-
-Outputs, under `saved_models/ncbi_disease/biencoder/train/<exp>/`:
-
-- `epoch_<i>/` — per-epoch weights, plus `top64_candidates/test.{json,t7}` and
-  `top64_candidates/test_eval.txt` (**the retriever result for that epoch**)
-- `pytorch_model.bin` — the best epoch, copied to the parent directory
-- `log.txt`, `training_params.txt`, `training_time.txt`, `per_step_log.json`,
-  `diagnostics.json`, `training_curves.png`
-
-Reference wall-clock on one A100: **~2.6 minutes** for the 1,299-pair Sci-ZSEL set.
-
-### Step 5 — Cross-encoder reranker fine-tuning (paper §5.4)
-
-```bash
-cd modeling/BLINK
+```
+cd modeling/BLINK/
 bash scripts/blink_reranker_fine_tuning.sh
 ```
 
-The script first calls `scripts/get_biencoder_cands_for_reranker_training.sh` twice — once for the
-test set, once for the chosen training set — to produce the top-64 candidate lists the reranker
-consumes, then trains the cross-encoder on them.
-
-> **Note:** candidate generation for the reranker uses the **off-the-shelf**
-> `biencoder_wiki_large.bin`, not the retriever fine-tuned in step 4 (`--path_to_model $MODEL_PATH`
-> in `get_biencoder_cands_for_reranker_training.sh`). The reranker is therefore trained
-> independently of step 4. Point `MODEL_PATH` at
-> `$ROOT/saved_models/$ONTO/biencoder/train/$EXP/pytorch_model.bin` if you want the two stages
-> coupled instead.
-
-Cross-encoder defaults: 3 epochs, `--train_batch_size 16`, `--gradient_accumulation_steps 2`,
-`--learning_rate 2e-05`, `--dropout_rate 0.2`, `--max_context_length 64 --max_cand_length 128
---max_seq_length 192`, `--cross_enc_negative_selection only_bienc_20_neg` (gold + 20 negatives
-sampled from the bi-encoder's top-64, plain cross-entropy). `EXP_LIST` again selects the training
-set — **it defaults to `synonymU(...)`, which differs from the retriever script's default; set both
-to the same experiment unless you intend otherwise.** `WANDB_MODE=disabled` is exported by the
-script.
-
-Outputs, under `saved_models/ncbi_disease/crossencoder/train/fine-tune/seed-<s>/<exp>/`:
-
-- `epoch_<i>/crossencoder_predictions_eval.txt` — **the reranker metrics for that epoch**
-- `epoch_<i>/crossencoder_predictions{,_grag}.json` — ranked predictions
-- `epoch_<i>_<part>/` — intra-epoch checkpoints
-- `log.txt`, `train_hist.json`, `train_hist.png`, `training_time.txt`
-
-Reference wall-clock on one A100: **~7.3 minutes** (3 epochs, 1,299 pairs).
-
-### Step 6 — ReS reranker fine-tuning (paper §5.4, alternative reranker)
-
-ReS needs the same BLINK top-64 candidate lists, converted to its own format. Generate the
-candidates for the experiment you want (skip this if step 5 already ran with the same `EXP_LIST`):
-
-```bash
-cd modeling/BLINK
-bash scripts/get_biencoder_cands_for_reranker_training.sh original_data test ncbi_disease
-bash scripts/get_biencoder_cands_for_reranker_training.sh \
-     "(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e" train ncbi_disease
 ```
-
-Then convert and train:
-
-```bash
-cd ../ReS
-conda activate sci-zsel-res
-python get_retriever_candidates.py     # commented out inside res_reranker_fine_tuning.sh
-conda deactivate
+cd modeling/ReS
 bash res_reranker_fine_tuning.sh
 ```
 
-> `get_retriever_candidates.py` is a **required one-time step** that is commented out on line 5 of
-> `res_reranker_fine_tuning.sh`. Run it explicitly (as above) or uncomment it. Its `exps` dict —
-> which must list `original_data` plus your chosen experiment — is at
-> `get_retriever_candidates.py:147`.
 
-It writes `datasets/ncbi_disease/res_format/train/<exp>/train.json` (1,299 samples for Sci-ZSEL),
-`.../original_data/test.json` (960 samples), and a ReS-shaped copy of the ontology at
-`res_format/train/medic.json`. Mention context is re-delimited with `[E1] … [\E1]`, and the gold
-entity is force-inserted into the candidate list when the retriever missed it.
+### What each step does
 
-`train_and_eval.py` holds the experiment list (line 17) and `train_on_other_data.py` holds every
-hyperparameter: 3 epochs, `--lr 1e-4`, `--batch 16`, `--cand_num_train 21`, `--cand_num 64`,
-`--type_loss sum_log_nce`, `--max_len 512`, seed 0, LoRA off (`lora = False` in
-`train_and_eval.py:16`).
+| Step | Reads | Writes |
+|---|---|---|
+| `grag_to_blink.sh` | `*_grag.json`, ontology | `blink_format/train/original_data/` — `train.jsonl` (retrieval pool), `test.jsonl` (eval set), `kb.jsonl`, `id_map.json` |
+| `get_biencoder_top_k.sh` | `original_data/train.jsonl` | top-64 lists from the **off-the-shelf** bi-encoder → `saved_models/<world>/biencoder/train/original_data/top64_candidates/train.json`; also builds the cached ontology encodings `*_entity_pool.t7` / `*_entity_encodings.t7` |
+| `entity_selection_and_pseudo_pair_construction.sh` | the above | entity sets E_EM + E_BT → LLM aliases (Ollama) → ontology-aware filter → one `blink_format/train/<exp>/train.jsonl` per configuration (see §9) |
+| `retriever_fine_tuning.sh` | `blink_format/train/<exp>/` | fine-tuned retriever + `epoch_<i>/top64_candidates/test_eval.txt` |
+| `blink_reranker_fine_tuning.sh` | regenerates top-64, then trains | cross-encoder + `epoch_<i>/crossencoder_predictions_eval.txt` |
+| `res_reranker_fine_tuning.sh` | `res_format/train/<exp>/` | ReS model + `<epoch>/pred_eval.txt` |
 
-Outputs, under
-`saved_models/ncbi_disease/res/ncbi_disease/train/seed-0/<exp>/ncbi_disease_<exp>/`:
+### Knobs
 
-- `<epoch>/pred_eval.txt` — **the ReS metrics for that epoch**
-- `<epoch>/model.pt`, `<epoch>/pred{,_grag}.json`, `<epoch>/pred_category_info.json`
-- `train.log`, `acc_epoch_*.png`
-- run-level logs in `modeling/ReS/logs/<timestamp>.log`
+| To change | Edit |
+|---|---|
+| Which pseudo-pair set to train on | `EXP_LIST` at the top of `retriever_fine_tuning.sh` and `blink_reranker_fine_tuning.sh`; `exps` in `ReS/train_and_eval.py:17` and `ReS/get_retriever_candidates.py:147` (all four already list the variants, commented out) |
+| Corpus / ontology | `config.json`, plus `ONTO` in the BLINK scripts — see §11 |
+| Seeds, epochs, batch size | `SEEDS` / `EPOCH` / `TRAIN_BATCH_SIZE` blocks in the BLINK scripts; `ReS/train_on_other_data.py` for ReS |
+
+Defaults as shipped: retriever — 1 epoch, batch 64, lr 2e-5, `bi_enc_negative_selection=add_prch_in_pos_list`
+(ontology parents/children of the gold entity count as extra positives, scored against the whole KB).
+Cross-encoder — 3 epochs, batch 16 × 2 accumulation, lr 2e-5,
+`cross_enc_negative_selection=only_bienc_20_neg` (gold + 20 negatives from the bi-encoder top-64).
+ReS — 3 epochs, batch 16, lr 1e-4, 21 training candidates, `sum_log_nce` loss, LoRA off. Seed 0 throughout.
+
+Reference wall-clock on one A100-80GB for the 1,299-pair Sci-ZSEL set: alias generation ~1.5 h
+(CPU/GPU-bound on Ollama), retriever ~2.6 min, cross-encoder ~7.3 min.
+
+### Three things that will bite you
+
+1. `EXP_LIST` **defaults differ** between `retriever_fine_tuning.sh` (Sci-ZSEL) and
+   `blink_reranker_fine_tuning.sh` (Sci-ZSEL + Synonym). Set both to the same value.
+2. The reranker's candidates come from the **off-the-shelf** `biencoder_wiki_large.bin`, not the
+   retriever fine-tuned in 5.3 (`MODEL_PATH` in `scripts/get_biencoder_cands_for_reranker_training.sh`).
+   Point it at `$ROOT/saved_models/$ONTO/biencoder/train/$EXP/pytorch_model.bin` to couple the stages.
+3. `*_entity_pool.t7` / `*_entity_encodings.t7` are reused blindly if present. **Delete them whenever
+   you change the ontology**, or you will score against stale encodings with no warning.
 
 ---
 
@@ -529,6 +442,22 @@ So the two headline configurations are:
 
 and the filter ablation is `(m1_e1)U(m3_e1)_multi_primeU(m4_e2)_multi_prime` (same sets, no
 `_rm_sm_e`).
+
+Step 5.2 builds all of them in one pass. Sanity-check your run against the NCBI-Disease pair counts
+(`wc -l` on each `blink_format/train/<exp>/train.jsonl`):
+
+| Experiment | Pairs |
+|---|---|
+| `(m1_e1)` | 854 |
+| `(m3_e1)_multi_prime` → `_rm_sm_e` | 556 → 360 |
+| `(m4_e2)_multi_prime` → `_rm_sm_e` | 1,102 → 740 |
+| `(m1_e1)U(m3_e1)_multi_primeU(m4_e2)_multi_prime` (w/o filter) | 1,736 |
+| `(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e` (**Sci-ZSEL**) | 1,299 |
+| `synonym` | 3,283 |
+| `synonymU(...)` (**Sci-ZSEL + Synonym**) | 4,582 |
+
+Each directory also gets `cat_wise_acc.json` (pseudo-label precision per overlap category, when
+ground truth exists) and `train_category_count.json`.
 
 ### Lexical-overlap categories
 
@@ -635,7 +564,7 @@ ontology-aware filter has no `ParentIDs` to read. Either run
 `data_preparation/utils.py::convert_kb` to produce a `synonyms`/`ParentIDs`/`altdiseaseid` version
 (then use `get_relations_from_ontology`), or supply the four MeSH relation files that
 `utils.py::get_mesh_relations` expects (`relations_{desc,pa,qual,supp}2025.json`) — they are not
-redistributed here. Also budget for encoding 355,213 entities in step 2.
+redistributed here. Also budget for encoding 355,213 entities in step 5.1.
 
 ---
 
@@ -665,20 +594,13 @@ aggregate counts. For NCBI-Disease / MEDIC:
 **The two conda envs are not interchangeable.** BLINK code needs `transformers==4.31.0`, ReS needs
 `4.30.2`. Each `.sh` activates the right one; if you invoke a `.py` by hand, activate it yourself.
 
-**`EXP_LIST` defaults differ between scripts.** `retriever_fine_tuning.sh` defaults to the Sci-ZSEL
-set while `blink_reranker_fine_tuning.sh` defaults to Sci-ZSEL + Synonym. Set both explicitly.
-
-**Stale `.t7` caches are silent.** `medic_entity_pool.t7` / `medic_entity_encodings.t7` are loaded
-if present, with no check that they match the current ontology. Delete them after any ontology
-change.
-
 **Ollama port 11435 is hard-coded in two places** — `run_ollama_to_serve_llm` (`OLLAMA_HOST`) and
 `alias_generation.py::LLMSelector.get_ollama` (`base_url`). `alias_generation.sh` polls
 `http://127.0.0.1:11435/api/tags` until the server answers and kills the whole process group on
 exit; if a previous run left a server on that port, the trap in the new run will kill it.
 
 **`get_retriever_candidates.py` is commented out** in `res_reranker_fine_tuning.sh`. ReS training
-will fail on a missing `res_format/.../train.json` unless you run it first (§8, step 6).
+will fail on a missing `res_format/.../train.json` unless you uncomment it for the first run (§8).
 
 **ReS pins `--gpus "0,1,2,3"`** at `train_on_other_data.py:135`, which sets
 `CUDA_VISIBLE_DEVICES`. Change it to match your machine (e.g. `"0"` for a single GPU).
