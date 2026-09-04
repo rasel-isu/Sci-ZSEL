@@ -7,6 +7,9 @@ import bisect
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
+with open('../../config.json') as f:
+    CONFIG = json.load(f)
+    
 class Logger(object):
 
     def __init__(self, log_path, on=True):

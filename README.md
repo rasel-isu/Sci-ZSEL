@@ -37,6 +37,8 @@ bash scripts/blink_reranker_fine_tuning.sh
 
 ```
 cd modeling/ReS
-bash scripts/res_reranker_fine_tuning.sh
+bash res_reranker_fine_tuning.sh
 ```
+
+
 

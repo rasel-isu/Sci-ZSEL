@@ -1,9 +1,6 @@
 import argparse
-import json
 import os
-from data_disambiguation import load_data, load_entities
 from run_disambiguation_attention import main
-
 
 
 def eval_exp(data_dir, 

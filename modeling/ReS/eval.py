@@ -5,7 +5,7 @@ import re
 from pptx import Presentation
 from pptx.util import Inches
 import pandas as pd
-from data_preparation.utils import compare_with_multiple_gt, compare_with_multiple_gt_with_altid, get_category
+from utils import compare_with_multiple_gt, compare_with_multiple_gt_with_altid, get_category
 import wandb
 
 class Evaluation:

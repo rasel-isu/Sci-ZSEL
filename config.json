@@ -8,5 +8,9 @@
     "has_ground_truth": true,
     "has_ent_alt_id": true,
     "exact_match_file":"m1_e1_unq_ents.json",
-    "biencoder_top1_file":"top_1_from_biencoder.json"
+    "biencoder_top1_file":"top_1_from_biencoder.json",
+    "res":{
+        "pretrained_model":"../../saved_models/zeshel_disambiguation_attention.pt",
+        "hf_model": "roberta-base"
+    }
 }
