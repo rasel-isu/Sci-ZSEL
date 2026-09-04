@@ -1,67 +1,101 @@
 {
-    "world":"ncbi_disease",
-    "kb_name":"medic",
-    "kb_file":"medic.json",
-    "data_dir":"../datasets/ncbi_disease/",
-    "saved_model_dir":"../saved_models/ncbi_disease/",
-    "synonym_key_on_ontology":"synonyms",
+    "world": "ncbi_disease",
+    "kb_name": "medic",
+    "kb_file": "medic.json",
+    "data_dir": "../datasets/ncbi_disease/",
+    "saved_model_dir": "../saved_models/ncbi_disease/",
+    "synonym_key_on_ontology": "synonyms",
     "has_ground_truth": true,
     "has_ent_alt_id": true,
-    "exact_match_file":"m1_e1_unq_ents.json",
-    "biencoder_top1_file":"top_1_from_biencoder.json",
-    "blink":{
-        "split_name":"train",
-        "base_models":{
-            "biencoder":"../saved_models/biencoder_wiki_large.bin",
-            "crossencoder":"../saved_models/crossencoder_wiki_large.bin"
+    "exact_match_file": "m1_e1_unq_ents.json",
+    "biencoder_top1_file": "top_1_from_biencoder.json",
+    "blink": {
+        "split_name": "train",
+        "base_models": {
+            "biencoder": "../saved_models/biencoder_wiki_large.bin",
+            "crossencoder": "../saved_models/crossencoder_wiki_large.bin"
         },
-        "candidate_generation":{
-            "top_k":64,
-            "max_context_length":64,
-            "encode_batch_size":8,
-            "eval_batch_size":32,
-            "bert_model":"bert-large-uncased",
-            "has_gt":true
+        "candidate_generation": {
+            "top_k": 64,
+            "max_context_length": 64,
+            "encode_batch_size": 8,
+            "eval_batch_size": 32,
+            "bert_model": "bert-large-uncased",
+            "has_gt": true
         },
-        "retriever":{
-            "exp_list":[
+        "retriever": {
+            "exp_list": [
                 "synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e"
             ],
-            "negative_selection":["add_prch_in_pos_list"],
-            "seeds":[0],
-            "epochs":1,
-            "train_batch_size":64,
-            "encode_batch_size":8,
-            "learning_rate":"2e-05",
-            "dropout_rate":0.2,
-            "max_context_length":128,
-            "max_cand_length":128,
-            "max_seq_length":192,
-            "top_k":64,
-            "bert_model":"bert-large-uncased",
-            "type_optimization":"all_encoder_layers"
+            "negative_selection": [
+                "add_prch_in_pos_list"
+            ],
+            "seeds": [
+                0
+            ],
+            "epochs": 1,
+            "train_batch_size": 64,
+            "encode_batch_size": 8,
+            "learning_rate": "2e-05",
+            "dropout_rate": 0.2,
+            "max_context_length": 128,
+            "max_cand_length": 128,
+            "max_seq_length": 192,
+            "top_k": 64,
+            "bert_model": "bert-large-uncased",
+            "type_optimization": "all_encoder_layers"
         },
-        "reranker":{
-            "exp_list":[
+        "reranker": {
+            "exp_list": [
                 "synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e"
             ],
-            "negative_selection":"only_bienc_20_neg",
-            "seeds":[0],
-            "epochs":3,
-            "train_batch_size":16,
-            "gradient_accumulation_steps":2,
-            "eval_batch_size":32,
-            "learning_rate":"2e-05",
-            "dropout_rate":0.2,
-            "max_context_length":64,
-            "max_cand_length":128,
-            "max_seq_length":192,
-            "bert_model":"bert-large-uncased",
-            "type_optimization":"all_encoder_layers"
+            "negative_selection": "only_bienc_20_neg",
+            "seeds": [
+                0
+            ],
+            "epochs": 3,
+            "train_batch_size": 16,
+            "gradient_accumulation_steps": 2,
+            "eval_batch_size": 32,
+            "learning_rate": "2e-05",
+            "dropout_rate": 0.2,
+            "max_context_length": 64,
+            "max_cand_length": 128,
+            "max_seq_length": 192,
+            "bert_model": "bert-large-uncased",
+            "type_optimization": "all_encoder_layers"
         }
     },
-    "res":{
-        "pretrained_model":"../../saved_models/zeshel_disambiguation_attention.pt",
-        "hf_model": "roberta-base"
+    "res": {
+        "pretrained_model": "../../saved_models/zeshel_disambiguation_attention.pt",
+        "hf_model": "roberta-base",
+        "split_name": "train",
+        "exp_list": [
+            "synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e"
+        ],
+        "seeds": [
+            0
+        ],
+        "lora": false,
+        "use_title_during_testing": true,
+        "epochs": 3,
+        "learning_rate": 0.0001,
+        "batch_size": 16,
+        "cand_num_train": 21,
+        "cand_num": 64,
+        "type_loss": "sum_log_nce",
+        "max_len": 512,
+        "max_ent_len": 256,
+        "max_text_len": 256,
+        "warmup_proportion": 0.1,
+        "weight_decay": 0.01,
+        "adam_epsilon": 1e-06,
+        "gradient_accumulation_steps": 1,
+        "num_workers": 0,
+        "clip": 1,
+        "info_token_num": 3,
+        "gpus": "0,1,2,3",
+        "logging_steps": 100,
+        "eval_step": 10000
     }
 }

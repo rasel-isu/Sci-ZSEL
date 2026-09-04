@@ -14,7 +14,8 @@ def train_exp(data_dir,
               use_title_during_testing, 
               both_set=False):
             
-    seeds = [0]
+    RES = CONFIG['res']
+    seeds = RES.get('seeds', [0])
     for seed in seeds:
         f_setting = list(exp.keys())[0]
         parser = argparse.ArgumentParser()
@@ -32,7 +33,7 @@ def train_exp(data_dir,
         parser.add_argument("--out_dir", default=model_path)
         parser.add_argument("--model", default=f"{model_path}/trained_model.pt")
         
-        num_train_epoch = 3
+        num_train_epoch = RES.get('epochs', 3)
         if onto_name =='medic':
             kb_file_path = f"{data_dir.replace(f_setting, '')}/medic.json"
         elif onto_name =='mesh':
@@ -62,8 +63,8 @@ def train_exp(data_dir,
         parser.add_argument("--epochs", default=num_train_epoch)
         parser.add_argument("--lora", default=lora)
    
-        parser.add_argument("--lr", default=1e-4, type=float)
-        parser.add_argument("--batch", default=16,type=int)
+        parser.add_argument("--lr", default=float(RES.get("learning_rate", 1e-4)), type=float)
+        parser.add_argument("--batch", default=int(RES.get("batch_size", 16)), type=int)
         if both_set:
             parser.add_argument("--train_kb_prime", default=f"kb/{onto_name}_prime_train_and_test.json")
             parser.add_argument("--train_data", default=f"{data_dir}{corpus_name}_train_and_test_ho.json")
@@ -102,16 +103,16 @@ def train_exp(data_dir,
         parser.add_argument("--saved_pt_model", default=CONFIG['res']['pretrained_model'])
         parser.add_argument("--transformer_model",  default=CONFIG['res']['hf_model'])
 
-        parser.add_argument("--cand_num_train", default=21,type=int)
-        parser.add_argument("--cand_num", default=64,type=int)
+        parser.add_argument("--cand_num_train", default=int(RES.get("cand_num_train", 21)), type=int)
+        parser.add_argument("--cand_num", default=int(RES.get("cand_num", 64)), type=int)
 
         parser.add_argument("--type_loss", type=str,
-                            default="sum_log_nce",
+                            default=RES.get("type_loss", "sum_log_nce"),
                             choices=["log_sum", "sum_log", "sum_log_nce",
                                         "max_min", "bce_loss"])
-        parser.add_argument("--max_len", default=512, type=int)
-        parser.add_argument("--max_ent_len", default=256, type=int)
-        parser.add_argument("--max_text_len", default=256, type=int)
+        parser.add_argument("--max_len", default=int(RES.get("max_len", 512)), type=int)
+        parser.add_argument("--max_ent_len", default=int(RES.get("max_ent_len", 256)), type=int)
+        parser.add_argument("--max_text_len", default=int(RES.get("max_text_len", 256)), type=int)
 
         parser.add_argument("--forgot_test_data", default=f"{test_data_filepath}test.json")
         parser.add_argument("--lego_test_data", default=f"{test_data_filepath}test.json")
@@ -123,18 +124,18 @@ def train_exp(data_dir,
         parser.add_argument("--star_kb", default=f"kb/{onto_name}_kb.json")
         parser.add_argument("--yugioh_kb", default=f"kb/{onto_name}_kb.json")
 
-        parser.add_argument("--warmup_proportion", default=0.1)
-        parser.add_argument("--weight_decay", default=0.01)
-        parser.add_argument("--adam_epsilon", default=1e-6, type=float)
-        parser.add_argument("--gradient_accumulation_steps", default=1, type=int)
+        parser.add_argument("--warmup_proportion", default=RES.get("warmup_proportion", 0.1))
+        parser.add_argument("--weight_decay", default=RES.get("weight_decay", 0.01))
+        parser.add_argument("--adam_epsilon", default=float(RES.get("adam_epsilon", 1e-6)), type=float)
+        parser.add_argument("--gradient_accumulation_steps", default=int(RES.get("gradient_accumulation_steps", 1)), type=int)
         
-        parser.add_argument("--num_workers", default=0)
+        parser.add_argument("--num_workers", default=RES.get("num_workers", 0))
         parser.add_argument("--simpleoptim", default=False)
-        parser.add_argument("--clip", default=1)
-        parser.add_argument("--info_token_num", default=3, type=int)
-        parser.add_argument("--gpus", default="0,1,2,3")
-        parser.add_argument("--logging_steps", default=100)
-        parser.add_argument("--eval_step", default=10000, type=int)
+        parser.add_argument("--clip", default=RES.get("clip", 1))
+        parser.add_argument("--info_token_num", default=int(RES.get("info_token_num", 3)), type=int)
+        parser.add_argument("--gpus", default=RES.get("gpus", "0,1,2,3"))
+        parser.add_argument("--logging_steps", default=RES.get("logging_steps", 100))
+        parser.add_argument("--eval_step", default=int(RES.get("eval_step", 10000)), type=int)
         parser.add_argument("--do_train", action="store_true", default=True)
         parser.add_argument("--do_eval", action="store_true", default=False)
         parser.add_argument("--do_eval_only_each_epoch", action="store_true", default=False)

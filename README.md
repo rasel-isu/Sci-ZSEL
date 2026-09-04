@@ -11,20 +11,28 @@ This repository reproduces the full pipeline end to end. The worked example thro
 ## Table of contents
 
 - [1. Repository layout](#1-repository-layout)
-- [2. Requirements](#2-requirements)
-- [3. Installation](#3-installation)
-- [4. Machine-specific paths you MUST edit](#4-machine-specific-paths-you-must-edit)
-- [5. Pretrained checkpoints to download](#5-pretrained-checkpoints-to-download)
-- [6. Data](#6-data)
-- [7. `config.json` reference](#7-configjson-reference)
-- [8. Running the pipeline](#8-running-the-pipeline)
-- [9. Decoding the experiment names](#9-decoding-the-experiment-names)
-- [10. Where the results are](#10-where-the-results-are)
-- [11. Reproducing on the other datasets](#11-reproducing-on-the-other-datasets)
-- [12. LLM cost accounting](#12-llm-cost-accounting)
-- [13. Troubleshooting and known quirks](#13-troubleshooting-and-known-quirks)
-- [14. Attribution and license](#14-attribution-and-license)
-- [15. Citation](#15-citation)
+- [2. Installation](#2-installation)
+- [3. `config.json` reference](#3-configjson-reference)
+- [4. Running the pipeline](#4-running-the-pipeline)
+- [5. Where the results are](#5-where-the-results-are)
+- [6. Attribution and license](#6-attribution-and-license)
+- [7. Citation](#7-citation)
+
+---
+
+## Documentation
+
+Details live in [`docs/`](docs/):
+
+| Doc | What's in it |
+|---|---|
+| [Requirements](docs/requirements.md) | Hardware, the two conda environments, exact versions, Ollama |
+| [Machine-specific paths](docs/machine-specific-paths.md) | **Read this first** — every hardcoded path you must repoint |
+| [Pretrained checkpoints](docs/checkpoints.md) | Download commands for the three model files |
+| [Data](docs/data.md) | What ships, corpus/ontology formats, generated intermediates |
+| [Experiment names](docs/experiment-names.md) | Decoding `(m1_e1)U(m3_e1)_multi_prime_rm_sm_e...` and the HO/MINT/LO/NO categories |
+| [LLM cost accounting](docs/llm-cost.md) | Tokens and wall clock spent on alias generation |
+| [Troubleshooting](docs/troubleshooting.md) | Known quirks and how they fail |
 
 ---
 
@@ -53,10 +61,11 @@ Sci-ZSEL-release/
 │   │   └── scripts/                # entry points + load_config.sh (config.json -> shell vars)
 │   └── ReS/                        # vendored + modified HITsz-TMG/Read-and-Select reranker
 │       ├── get_retriever_candidates.py   # BLINK top-64 -> ReS input format
-│       ├── train_and_eval.py             # entry point (experiment list lives here)
-│       ├── train_on_other_data.py        # all ReS hyperparameters live here
+│       ├── train_and_eval.py             # entry point (reads config.json -> "res")
+│       ├── train_on_other_data.py        # maps config.json -> ReS argparse namespace
 │       └── run_disambiguation_attention.py
 ├── datasets/                       # raw corpora + ontologies (tracked in git)
+├── docs/                           # the reference docs linked above
 └── saved_models/                   # checkpoints + all outputs (NOT tracked; you create it)
 ```
 
@@ -66,50 +75,16 @@ Sci-ZSEL-release/
 
 ---
 
-## 2. Requirements
+## 2. Installation
 
-**Hardware.** The reference runs used a single **NVIDIA A100-SXM4-80GB**. `bert-large-uncased`
-with `--train_batch_size 64` and `--max_seq_length 192` needs ~40 GB; every training script passes
-`--data_parallel`, so multiple smaller GPUs also work (ReS defaults to `--gpus 0,1,2,3` — see §13).
-Alias generation needs a GPU for the local Ollama server, or will fall back to CPU (much slower).
-
-**Disk.** ~10 GB for the pretrained checkpoints, plus ~2.7 GB per fine-tuned bi-encoder,
-~1.3 GB per cross-encoder epoch, and ~1.5 GB per ReS epoch.
-
-**Software.** Two conda environments, because BLINK and ReS need incompatible `transformers`
-versions:
-
-| env | Python | torch | transformers | used by |
-|---|---|---|---|---|
-| `sci-zsel` | 3.11 | 2.x (cu12/cu13) | 4.31.0 | data preparation, BLINK retriever + cross-encoder |
-| `sci-zsel-res` | 3.9 | 2.0.1 (cu117) | 4.30.2 | ReS reranker |
-
-Reference versions actually used: `sci-zsel` = Python 3.11.15 / torch 2.13.0+cu130 / transformers
-4.31.0; `sci-zsel-res` = Python 3.9.25 / torch 2.0.1+cu117 / transformers 4.30.2. Note that
-`modeling/BLINK/requirements.txt` does not pin `torch` — it arrives as a dependency of
-`sentence-transformers`, so pin it yourself if you need bit-level reproducibility.
-
-**[Ollama](https://ollama.com) is required** — it serves the alias-generation LLM in step 5.2, and
-`data_preparation/alias_generation.sh` starts it, waits for it, and shuts it down. Install it before
-running the pipeline (§3). Steps 5.1, 5.3 and 5.4 do not need it.
-
-**External services / models downloaded at runtime:**
-
-- `bert-large-uncased` (Hugging Face) — retriever and cross-encoder backbone
-- `roberta-base` (Hugging Face) — ReS backbone
-- `FremyCompany/BioLORD-2023-M` (Hugging Face) — similarity model for the ontology-aware filter
-- `llama3.2:3b-instruct-fp16` (Ollama) — alias generation LLM
-
-On an offline cluster, pre-cache these and set `HF_HOME` / `OLLAMA_MODELS` accordingly.
-
----
-
-## 3. Installation
+Before you start: check [Requirements](docs/requirements.md) (GPU, the two conda envs, Ollama),
+repoint the hardcoded paths listed in [Machine-specific paths](docs/machine-specific-paths.md), and
+download the three model files in [Pretrained checkpoints](docs/checkpoints.md).
 
 ```bash
 git clone https://github.com/rasel-isu/Sci-ZSEL.git
 cd Sci-ZSEL
-# edit install.sh first — see §4
+# edit install.sh first - see docs/machine-specific-paths.md
 bash install.sh
 ```
 
@@ -147,173 +122,13 @@ ollama serve &
 ollama pull llama3.2:3b-instruct-fp16
 ```
 
-Point `data_preparation/run_ollama_to_serve_llm` at that same `OLLAMA_MODELS` directory (§4). That
+Point `data_preparation/run_ollama_to_serve_llm` at that same `OLLAMA_MODELS` directory ([machine-specific paths](docs/machine-specific-paths.md)). That
 file is what the pipeline actually launches, so `ollama` must resolve on `PATH` when it runs — on a
 cluster, load the module or export the `PATH` line above in your job script.
 
 ---
 
-## 4. Machine-specific paths you MUST edit
-
-Every shell script activates conda by absolute path, and two files hard-code cache directories from
-the original machine. **The pipeline will not run until these are pointed at your own system.**
-
-| File | Line(s) | What to change |
-|---|---|---|
-| `install.sh` | 1–2, 4, 10 | conda hook path, `profile.d/conda.sh`, and the two `--prefix` env locations |
-| `data_preparation/grag_to_blink.sh` | 1–2 | conda hook + `profile.d/conda.sh` |
-| `data_preparation/entity_selection_and_pseudo_pair_construction.sh` | 1–2 | same |
-| `data_preparation/alias_generation.sh` | 22–23 | same |
-| `data_preparation/run_ollama_to_serve_llm` | 1 | `OLLAMA_MODELS` — where Ollama keeps its blobs |
-| `data_preparation/pseudo_pair_construction.py` | 192 | `cache_dir` for the BioLORD sentence-transformer |
-| `modeling/BLINK/scripts/get_biencoder_top_k.sh` | 1–2 | conda hook + `profile.d/conda.sh` |
-| `modeling/BLINK/scripts/get_biencoder_cands_for_reranker_training.sh` | 1–2 | same |
-| `modeling/BLINK/scripts/retriever_fine_tuning.sh` | 1–2 | same |
-| `modeling/BLINK/scripts/blink_reranker_fine_tuning.sh` | 1–2 | same |
-| `modeling/ReS/res_reranker_fine_tuning.sh` | 1–2 | same |
-
-A quick way to find them all again:
-
-```bash
-grep -rn "/lustre/\|OLLAMA_MODELS\|cache_dir" --include='*.sh' --include='*.py' \
-     install.sh data_preparation modeling | grep -v __pycache__
-```
-
-`data_preparation/run_ollama_to_serve_llm` also fixes the Ollama port at **11435**
-(`OLLAMA_HOST=127.0.0.1:11435`). `alias_generation.py` hard-codes the same port in
-`LLMSelector.get_ollama` (`base_url = "http://127.0.0.1:11435"`), so change both together if the
-port is taken.
-
----
-
-## 5. Pretrained checkpoints to download
-
-Three checkpoints go into `saved_models/` at the repo root.
-
-**1–2. BLINK retriever + cross-encoder** — from
-[facebookresearch/BLINK](https://github.com/facebookresearch/BLINK). Run from the repo root:
-
-```bash
-mkdir -p saved_models
-wget -c -P saved_models http://dl.fbaipublicfiles.com/BLINK/biencoder_wiki_large.bin    # 2.7 GB
-wget -c -P saved_models http://dl.fbaipublicfiles.com/BLINK/crossencoder_wiki_large.bin # 1.3 GB
-```
-
-**3. ReS zero-shot checkpoint** — `zeshel_disambiguation_attention.pt` (1.5 GB), the ZESHEL-trained
-model released by [HITsz-TMG/Read-and-Select](https://github.com/HITsz-TMG/Read-and-Select)
-(*A Read-and-Select Framework for Zero-shot Entity Linking*, Findings of EMNLP 2023).
-
-It is hosted on OneDrive, which refuses anonymous non-browser requests (`403`), so `wget`/`curl`
-will not work — **download it in a browser** from
-<https://1drv.ms/u/s!AoTJ9uWa69GGf3Rr-zCtO14Nvyo?e=CFWExB> (the link in that repo's
-`model_disambiguation/README.md`), then move it into place:
-
-```bash
-mv ~/Downloads/zeshel_disambiguation_attention.pt saved_models/
-```
-
-If you are on a headless cluster, download it on your laptop and copy it over:
-
-```bash
-scp zeshel_disambiguation_attention.pt <user>@<host>:<path-to-repo>/saved_models/
-```
-
-Only ReS needs this file; steps 5.1–5.4 (BLINK) run without it. The path is configurable via
-`config.json → res.pretrained_model`.
-
-**Verify.** All three should be present with these sizes:
-
-```bash
-ls -l saved_models/*.bin saved_models/*.pt
-# 2681357077  biencoder_wiki_large.bin
-# 1340677176  crossencoder_wiki_large.bin
-# 1522192979  zeshel_disambiguation_attention.pt
-```
-
-Everything else under `saved_models/` is produced by the pipeline, including the cached ontology
-encodings (`saved_models/<world>/medic_entity_pool.t7`, `medic_entity_encodings.t7`), which are
-built on the first bi-encoder run and reused afterwards.
-
----
-
-## 6. Data
-
-### 6.1 What ships
-
-| Directory | Corpus | Ontology | Train mentions | Test mentions | Ontology entities | Train GT? |
-|---|---|---|---|---|---|---|
-| `datasets/ncbi_disease/` | NCBI-Disease | MEDIC (`medic.json`) | 5,145 | 960 | 13,316 | yes |
-| `datasets/bc5cdr/` | BC5CDR | MeSH (`mesh.json`) | 9,285 | 9,654 | 355,213 | yes |
-| `datasets/qtl_cmo/` | Animal science (QTL) | CMO (`cmo_kb.json`) | 16,385 | 2,032 | 4,133 | **no** |
-| `datasets/qtl_vt/` | Animal science (QTL) | VT (`vt_kb.json`) | 16,385 | 1,688 | 4,044 | **no** |
-| `datasets/qtl_lpt/` | Animal science (QTL) | LPT (`lpt_kb.json`) | 16,385 | 722 | 520 | **no** |
-
-The three `qtl_*` directories are the **new animal science benchmark** released with the paper. They
-share one unlabeled 16,385-mention training corpus (`ground_truth: []` — this is the
-zero-human-annotation setting the method targets) and have one annotated test set per livestock
-trait ontology. Set `has_ground_truth: false` in `config.json` for these (see §7).
-
-Prompts also ship for `cometa`, but the COMETA corpus itself is not redistributed here.
-
-### 6.2 Raw corpus format (`*_grag.json`)
-
-A JSON list. The mention is delimited in-place by `[MENTION_START]` / `[MENTION_END]`:
-
-```json
-{
-  "sample_id": 1760124371,
-  "mention": "skin tumour",
-  "mention_context": "A common human [MENTION_START] skin tumour [MENTION_END] is caused by ...",
-  "ground_truth": [{"id": "D012878", "title": "Skin Neoplasms"}]
-}
-```
-
-`ground_truth` is a list (a mention may have several acceptable ontology ids) and is `[]` for
-unlabeled training corpora.
-
-### 6.3 Ontology format
-
-A JSON dict keyed by entity id:
-
-```json
-{
-  "C538288": {
-    "id": "C538288",
-    "name": "10p Deletion Syndrome (Partial)",
-    "def": "",
-    "synonyms": ["Chromosome 10, monosomy 10p", "..."],
-    "altdiseaseid": [],
-    "ParentIDs": ["MESH:D002872", "MESH:D025063"]
-  }
-}
-```
-
-- `name` / `def` become the entity title and description given to the encoders.
-- `synonyms` is used only for the curated-synonym baseline (key name is configurable).
-- `altdiseaseid` holds alternate ids that count as correct at evaluation time.
-- `ParentIDs` drives both the ontology-aware alias filter and the parent/child-aware negative
-  sampling. **An entity with no `def` is dropped from the LLM alias-generation pool.**
-
-`datasets/bc5cdr/mesh.json` is still in raw MeSH form (`synonym`, `parent_of`, `is_a` as a string).
-`data_preparation/utils.py::convert_kb` converts a raw ontology into the schema above; see §11.
-
-### 6.4 Generated intermediates
-
-| Path | Written by | Contents |
-|---|---|---|
-| `datasets/<world>/blink_format/train/<exp>/train.jsonl` | data preparation | BLINK training pairs |
-| `datasets/<world>/blink_format/train/original_data/test.jsonl` | data preparation | the gold test set |
-| `.../<exp>/{kb.jsonl,entity.jsonl,id_map.json}` | data preparation | ontology as integer-indexed candidates + int↔ontology-id map |
-| `datasets/<world>/res_format/train/<exp>/train.json` | `get_retriever_candidates.py` | ReS training pairs with top-64 candidates |
-| `datasets/<world>/res_format/train/original_data/test.json` | `get_retriever_candidates.py` | ReS test set |
-
-`id_map.json` maps the contiguous integer ids used inside BLINK back to ontology ids; nearly every
-evaluation path goes through it, so never mix an `id_map.json` from one experiment with candidates
-from another.
-
----
-
-## 7. `config.json` reference
+## 3. `config.json` reference
 
 One file at the repo root selects the corpus and ontology for **every** step. It is read by relative
 path (`../config.json` from `data_preparation/`, `../../config.json` from `modeling/BLINK/` and
@@ -351,7 +166,13 @@ path (`../config.json` from `data_preparation/`, `../../config.json` from `model
     },
     "res": {
         "pretrained_model": "../../saved_models/zeshel_disambiguation_attention.pt",
-        "hf_model": "roberta-base"
+        "hf_model": "roberta-base",
+        "split_name": "train",
+        "exp_list": ["synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e"],
+        "seeds": [0], "lora": false, "use_title_during_testing": true,
+        "epochs": 3, "learning_rate": 1e-4, "batch_size": 16,
+        "cand_num_train": 21, "cand_num": 64, "type_loss": "sum_log_nce",
+        "max_len": 512, "gpus": "0,1,2,3", "...": "..."
     }
 }
 ```
@@ -373,19 +194,22 @@ path (`../config.json` from `data_preparation/`, `../../config.json` from `model
 | `biencoder_top1_file` | Filename for the E_BT entity set. |
 | `blink.split_name` | Which split directory the BLINK scripts operate on (`train`). |
 | `blink.base_models.*` | Pretrained BLINK checkpoints, **relative to `data_preparation/`**. |
-| `blink.candidate_generation.*` | Flags for `eval_biencoder.py` (top-*k*, batch sizes, `bert_model`). `has_gt` defaults to the top-level `has_ground_truth`; when false the `--has_gt` flag is omitted entirely rather than passed as `false` — see §13. |
+| `blink.candidate_generation.*` | Flags for `eval_biencoder.py` (top-*k*, batch sizes, `bert_model`). `has_gt` defaults to the top-level `has_ground_truth`; when false the `--has_gt` flag is omitted entirely rather than passed as `false` — see [Troubleshooting](docs/troubleshooting.md). |
 | `blink.retriever.*` | Flags for `train_biencoder.py`. `exp_list` and `negative_selection` are arrays — every combination is run in turn. |
 | `blink.reranker.*` | Flags for `train_cross.py`. `exp_list` and `seeds` are arrays. |
 | `res.pretrained_model` | ReS checkpoint, **relative to `modeling/ReS/`**. |
 | `res.hf_model` | ReS backbone (`roberta-base`). |
+| `res.exp_list`, `res.seeds` | Arrays. `exp_list` also drives `get_retriever_candidates.py`, which always converts `original_data` (the test set) plus one training set per entry. |
+| `res.lora`, `res.use_title_during_testing`, `res.split_name` | Run-level switches. |
+| `res.*` (remaining) | Every ReS hyperparameter: `epochs`, `learning_rate`, `batch_size`, `cand_num_train`, `cand_num`, `type_loss`, `max_len`, `max_ent_len`, `max_text_len`, `warmup_proportion`, `weight_decay`, `adam_epsilon`, `gradient_accumulation_steps`, `num_workers`, `clip`, `info_token_num`, `gpus`, `logging_steps`, `eval_step`. |
 
-The BLINK shell scripts read all of this through `modeling/BLINK/scripts/load_config.sh`, so
-`world` is never spelled out in a script. The ReS entry point still has its own experiment list —
-see §11.
+The BLINK shell scripts read all of this through `modeling/BLINK/scripts/load_config.sh` and the
+ReS modules read `CONFIG['res']` directly, so neither `world` nor any hyperparameter is spelled out
+in a script.
 
 ---
 
-## 8. Running the pipeline
+## 4. Running the pipeline
 
 Everything below is for the shipped NCBI-Disease configuration. **`cd` from the repo root each
 time** — every script reads `config.json` by a relative path and will fail from anywhere else.
@@ -443,23 +267,25 @@ bash res_reranker_fine_tuning.sh
 |---|---|---|
 | `grag_to_blink.sh` | `*_grag.json`, ontology | `blink_format/train/original_data/` — `train.jsonl` (retrieval pool), `test.jsonl` (eval set), `kb.jsonl`, `id_map.json` |
 | `get_biencoder_top_k.sh` | `original_data/train.jsonl` | top-64 lists from the **off-the-shelf** bi-encoder → `saved_models/<world>/biencoder/train/original_data/top64_candidates/train.json`; also builds the cached ontology encodings `*_entity_pool.t7` / `*_entity_encodings.t7` |
-| `entity_selection_and_pseudo_pair_construction.sh` | the above | entity sets E_EM + E_BT → LLM aliases (Ollama) → ontology-aware filter → one `blink_format/train/<exp>/train.jsonl` per configuration (see §9) |
+| `entity_selection_and_pseudo_pair_construction.sh` | the above | entity sets E_EM + E_BT → LLM aliases (Ollama) → ontology-aware filter → one `blink_format/train/<exp>/train.jsonl` per configuration (see [experiment names](docs/experiment-names.md)) |
 | `retriever_fine_tuning.sh` | `blink_format/train/<exp>/` | fine-tuned retriever + `epoch_<i>/top64_candidates/test_eval.txt` |
 | `blink_reranker_fine_tuning.sh` | regenerates top-64, then trains | cross-encoder + `epoch_<i>/crossencoder_predictions_eval.txt` |
 | `res_reranker_fine_tuning.sh` | `res_format/train/<exp>/` | ReS model + `<epoch>/pred_eval.txt` |
 
 ### Knobs
 
-The BLINK scripts hold no settings of their own — they `source scripts/load_config.sh`, which parses
-`config.json` with `python3` and exports every path and hyperparameter. So one file drives all of it:
+Neither the BLINK scripts nor the ReS entry points hold settings of their own. The BLINK scripts
+`source scripts/load_config.sh`, which parses `config.json` with `python3` and exports every path
+and hyperparameter; the ReS modules read `CONFIG['res']` directly. So one file drives all of it:
 
 | To change | Edit |
 |---|---|
-| Corpus / ontology | `config.json` top level (`world`, `kb_name`, `kb_file`, `data_dir`, `saved_model_dir`) — see §11 |
-| Which pseudo-pair set to train on | `blink.retriever.exp_list` and `blink.reranker.exp_list` in `config.json`; `exps` in `ReS/train_and_eval.py:17` and `ReS/get_retriever_candidates.py:147` |
-| Seeds, epochs, batch size, lr, negative selection | `blink.retriever.*` / `blink.reranker.*` in `config.json`; `ReS/train_on_other_data.py` for ReS |
+| Corpus / ontology | `config.json` top level (`world`, `kb_name`, `kb_file`, `data_dir`, `saved_model_dir`) |
+| Which pseudo-pair set to train on | `blink.retriever.exp_list`, `blink.reranker.exp_list` and `res.exp_list` in `config.json` |
+| Seeds, epochs, batch size, lr, negative selection | `blink.retriever.*` / `blink.reranker.*` / `res.*` in `config.json` |
 | Candidate-generation top-*k*, batch sizes | `blink.candidate_generation.*` in `config.json` |
 | Pretrained checkpoint locations | `blink.base_models.*` in `config.json` (BLINK), `res.pretrained_model` (ReS) |
+| GPUs ReS uses | `res.gpus` in `config.json` (sets `CUDA_VISIBLE_DEVICES`) |
 
 The valid `exp_list` and `negative_selection` values are listed as comments at the top of
 `scripts/retriever_fine_tuning.sh`. Paths inside `config.json` are written relative to
@@ -477,6 +303,7 @@ Defaults as shipped: retriever — 1 epoch, batch 64, lr 2e-5, `bi_enc_negative_
 Cross-encoder — 3 epochs, batch 16 × 2 accumulation, lr 2e-5,
 `cross_enc_negative_selection=only_bienc_20_neg` (gold + 20 negatives from the bi-encoder top-64).
 ReS — 3 epochs, batch 16, lr 1e-4, 21 training candidates, `sum_log_nce` loss, LoRA off. Seed 0 throughout.
+All of these are the `config.json` values, not code defaults.
 
 Reference wall-clock on one A100-80GB for the 1,299-pair Sci-ZSEL set: alias generation ~1.5 h
 (CPU/GPU-bound on Ollama), retriever ~2.6 min, cross-encoder ~7.3 min.
@@ -495,62 +322,7 @@ Reference wall-clock on one A100-80GB for the 1,299-pair Sci-ZSEL set: alias gen
 
 ---
 
-## 9. Decoding the experiment names
-
-The directory names encode how a training set was built. `U` means set union.
-
-| Component | Paper name | Meaning |
-|---|---|---|
-| `original_data` | — | Gold-labeled conversion of the raw corpus. `test.jsonl` is the evaluation set; `train.jsonl` is used only as the retrieval mention pool. **Never a training set.** |
-| `(m1_e1)` | E_EM pairs | Mention string exactly equals an ontology entity name. No LLM involved. |
-| `(m3_e1)` | E_EM + aliases | Mention matches an LLM-generated alias of an **exact-match-selected** entity. |
-| `(m4_e2)` | E_BT + aliases | Mention matches an LLM-generated alias of a **bi-encoder top-1** entity. |
-| `_multi_prime` | — | The LLM returns a comma-separated list; every element counts as an alias. |
-| `_rm_sm_e` | ontology-aware filter | "remove smaller entity": drop aliases whose similarity to the entity name is below any ontology neighbor's, or below 0.9. |
-| `synonym` | Synonym baseline | Pairs built from the ontology's own curated synonym list. No LLM involved. |
-
-So the two headline configurations are:
-
-- **Sci-ZSEL** = `(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e`
-- **Sci-ZSEL + Synonym** = `synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e`
-
-and the filter ablation is `(m1_e1)U(m3_e1)_multi_primeU(m4_e2)_multi_prime` (same sets, no
-`_rm_sm_e`).
-
-Step 5.2 builds all of them in one pass. Sanity-check your run against the NCBI-Disease pair counts
-(`wc -l` on each `blink_format/train/<exp>/train.jsonl`):
-
-| Experiment | Pairs |
-|---|---|
-| `(m1_e1)` | 854 |
-| `(m3_e1)_multi_prime` → `_rm_sm_e` | 556 → 360 |
-| `(m4_e2)_multi_prime` → `_rm_sm_e` | 1,102 → 740 |
-| `(m1_e1)U(m3_e1)_multi_primeU(m4_e2)_multi_prime` (w/o filter) | 1,736 |
-| `(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e` (**Sci-ZSEL**) | 1,299 |
-| `synonym` | 3,283 |
-| `synonymU(...)` (**Sci-ZSEL + Synonym**) | 4,582 |
-
-Each directory also gets `cat_wise_acc.json` (pseudo-label precision per overlap category, when
-ground truth exists) and `train_category_count.json`.
-
-### Lexical-overlap categories
-
-Every evaluation file breaks results down by how much the mention and the gold entity name overlap
-(`data_preparation/utils.py::get_category`, mirrored in `modeling/BLINK/utils.py:451` and
-`modeling/ReS/utils.py:140`):
-
-| Category | Condition |
-|---|---|
-| **HO** | Mention equals the entity name, or differs only by a trailing plural `s` |
-| **MINT** | Mention is a proper substring of the entity name |
-| **LO** | Mention and entity name share at least one token, but neither of the above |
-| **NO** | No shared token — the case the paper targets |
-
-The NCBI-Disease test set splits 277 / 29–31 / 432–435 / 219–220 across HO / MINT / LO / NO.
-
----
-
-## 10. Where the results are
+## 5. Where the results are
 
 | Stage | File |
 |---|---|
@@ -582,152 +354,7 @@ expect you to fill in the experiment/best-epoch dictionaries by hand.
 
 ---
 
-## 11. Reproducing on the other datasets
-
-To switch to another corpus/ontology:
-
-1. **Edit `config.json`.** For example, for the animal science CMO benchmark:
-
-   ```json
-   {
-     "world": "cmo",
-     "kb_name": "cmo",
-     "kb_file": "cmo_kb.json",
-     "data_dir": "../datasets/qtl_cmo/",
-     "saved_model_dir": "../saved_models/qtl_cmo/",
-     "synonym_key_on_ontology": "synonyms",
-     "has_ground_truth": false,
-     "has_ent_alt_id": true,
-     "exact_match_file": "m1_e1_unq_ents.json",
-     "biencoder_top1_file": "top_1_from_biencoder.json",
-     "res": {
-       "pretrained_model": "../../saved_models/zeshel_disambiguation_attention.pt",
-       "hf_model": "roberta-base"
-     }
-   }
-   ```
-
-   `has_ground_truth` must be `false` for all three QTL training corpora — their `ground_truth` is
-   empty by design, so pseudo-label quality reporting is skipped instead of scoring against nothing.
-   The gold test set is unaffected: `convert_grag_to_blink_format.py` always converts `test_grag.json`
-   with ground truth on. Use `vt` / `qtl_vt` / `vt_kb.json` and `lpt` / `qtl_lpt` / `lpt_kb.json` for
-   the other two ontologies.
-
-   Verified end to end on `qtl_cmo`: step 1 converts 16,385 unlabeled train mentions (placeholder
-   `label_id: -1`, used only as the retrieval pool) and 2,030 gold-labeled test mentions against the
-   4,133-entity CMO ontology.
-
-2. **Nothing to change in the shell scripts.** `scripts/load_config.sh` derives every path from the
-   keys above: `KB_FILE_PATH` = `data_dir`/`kb_file`, `CANDIDATE_ENCODINGS` /
-   `CANDIDATE_POOL_PATH` = `saved_model_dir`/`<kb_name>_entity_{encodings,pool}.t7`, and `--onto` =
-   `world`. Note this also decouples the `--onto` tag from the directory name, which the older
-   hardcoded scripts conflated — needed for the QTL sets, where `world` is `cmo` but the directory
-   is `qtl_cmo`.
-
-3. **Two Python `world` / `kb_name` switches** must know the new value:
-   - `data_preparation/pseudo_pair_construction.py:199` — which ontology-relation loader the
-     ontology-aware filter uses. Branches on `world`: `bc5cdr`, `ncbi_disease`,
-     `['cmo','vt','lpt']`, `['cometa']`. **An unlisted `world` leaves `relations` undefined and the
-     filter crashes with `NameError`.**
-   - `modeling/ReS/train_on_other_data.py:36` — how to name the KB file. Branches on `kb_name`:
-     `medic`, `mesh`, `['cmo','vt','lpt']`. An unlisted value leaves `kb_file_path` undefined.
-
-   `train_biencoder.py:236` / `eval_biencoder.py:135` also branch on `params["onto"]`, but the `kb`
-   dict they build there is dead code — nothing reads it, only `exact_kb` is passed downstream.
-   (`ncbi_disease` does not match that branch's `'ncbi'` test either, and runs fine.) You do not
-   need to add a case there.
-
-4. **Add a prompt.** `data_preparation/prompts/<world>/system.txt` and `human.txt`. `human.txt` must
-   contain the `{definition}` placeholder; `system.txt` carries the domain framing and few-shot
-   examples. Prompts already exist for `ncbi_disease`, `bc5cdr`, `cmo`, `vt`, `lpt`, `cometa`.
-
-5. **Delete stale ontology caches.** The cached encodings live at
-   `<saved_model_dir>/<kb_name>_entity_encodings.t7` and `<kb_name>_entity_pool.t7` — note the
-   directory comes from `saved_model_dir` and the filename prefix from `kb_name`, so for the CMO
-   config above that is `saved_models/qtl_cmo/cmo_entity_*.t7`, not `saved_models/cmo/`. Remove
-   them before the first run against a changed ontology.
-
-**BC5CDR needs extra work, and `convert_kb` is not the tool for it.** `datasets/bc5cdr/mesh.json`
-ships in raw MeSH form — dict-keyed, with `synonym` (not `synonyms`), no `altdiseaseid`, and no
-`ParentIDs`. So `synonym_key_on_ontology` must be `"synonym"` and `has_ent_alt_id` must be `false`
-(otherwise the converter raises `KeyError: 'altdiseaseid'`).
-
-`data_preparation/utils.py::convert_kb` will **not** convert it: it expects a *list* of OBO-exported
-entities and OBO-quoted synonym strings (`"foo" EXACT []`), so on `mesh.json` it fails with
-`TypeError: string indices must be integers` and, past that, `IndexError` in its synonym regex. Its
-output shape matches `cmo_kb.json`/`vt_kb.json`/`lpt_kb.json` exactly — it is the OBO→KB converter
-used to build the animal-science ontologies, not a MeSH converter.
-
-For the ontology-aware filter on BC5CDR you need the four MeSH relation files
-`relations_{desc,pa,qual,supp}2025.json`, which are not redistributed here, and
-`utils.py::get_mesh_relations` looks for them at a hardcoded `data/bc5cdr/onto/` (relative to
-`data_preparation/`, ignoring `data_dir`). The shipped `mesh.json` cannot substitute: `parent_of` is
-empty for all 355,213 entities and only 10,398 have any `is_a`. Everything upstream of the filter —
-conversion, exact-match pairs, alias generation — works without them. Also budget for encoding
-355,213 entities in step 5.1.
-
----
-
-## 12. LLM cost accounting
-
-Cost control is the point of the entity-selection stage, and the pipeline measures it for you.
-`alias_generation.py` writes a `*_token_counts.txt` next to each entity set with per-entity and
-aggregate counts. For NCBI-Disease / MEDIC:
-
-| Entity set | Entities prompted | Input tokens | Output tokens | Wall clock |
-|---|---|---|---|---|
-| E_EM (`m1_e1_unq_ents`) | 169 | 64,672 | 7,273 | 00:19:12 |
-| E_BT (`top_1_from_biencoder`) | 633 | 236,546 | 26,504 | 01:13:36 |
-| **Total** | **802** | **301,218** | **33,777** | **~1.5 h** |
-
-802 prompted entities out of 13,316 in MEDIC — about **6%** of the ontology. Wall clock is for
-`llama3.2:3b-instruct-fp16` served locally by Ollama and will vary with your hardware.
-
----
-
-## 13. Troubleshooting and known quirks
-
-**Run every script from its own directory.** `config.json` is opened as `../config.json` from
-`data_preparation/` and `../../config.json` from `modeling/BLINK/` and `modeling/ReS/`. Running
-`bash data_preparation/grag_to_blink.sh` from the repo root fails with `FileNotFoundError`.
-
-**The two conda envs are not interchangeable.** BLINK code needs `transformers==4.31.0`, ReS needs
-`4.30.2`. Each `.sh` activates the right one; if you invoke a `.py` by hand, activate it yourself.
-
-**`--has_gt` cannot be switched off by passing `false`.** `params.py:383` declares it as
-`type=bool`, and `bool("false")` is `True` — so `--has_gt false`, `--has_gt False` and
-`--has_gt true` all mean *true*; only omitting the flag gives false. `scripts/load_config.sh`
-therefore emits the entire flag or nothing (`CG_HAS_GT_FLAG`), driven by
-`blink.candidate_generation.has_gt` (which defaults to the top-level `has_ground_truth`). Watch for
-this if you add other `type=bool` flags.
-
-**Ollama port 11435 is hard-coded in two places** — `run_ollama_to_serve_llm` (`OLLAMA_HOST`) and
-`alias_generation.py::LLMSelector.get_ollama` (`base_url`). `alias_generation.sh` polls
-`http://127.0.0.1:11435/api/tags` until the server answers and kills the whole process group on
-exit; if a previous run left a server on that port, the trap in the new run will kill it.
-
-**`get_retriever_candidates.py` is commented out** in `res_reranker_fine_tuning.sh`. ReS training
-will fail on a missing `res_format/.../train.json` unless you uncomment it for the first run (§8).
-
-**ReS pins `--gpus "0,1,2,3"`** at `train_on_other_data.py:135`, which sets
-`CUDA_VISIBLE_DEVICES`. Change it to match your machine (e.g. `"0"` for a single GPU).
-
-**Weights & Biases** is used by the cross-encoder trainer (`train_cross.py`) and by ReS
-(`run_disambiguation_attention.py`); both reranker scripts already set
-`export WANDB_MODE=disabled`. Drop that line and run `wandb login` if you want the runs logged. The
-retriever trainer does not use wandb at all.
-
-**`log.txt` collisions.** `utils.Logger` appends `+` to the filename when a log already exists,
-which is why you may see `train.log`, `train.log+`, `train.log++` in a ReS output directory. The
-latest run is the one with the most `+`.
-
-**Duplicate detection is strict.** `utils.check_duplicate` raises `ValueError('Some samples are
-duplicated!')` if a generated `train.jsonl` contains two identical samples (ignoring `sample_id`).
-If you hit this after modifying the construction code, that is the assertion firing.
-
----
-
-## 14. Attribution and license
+## 6. Attribution and license
 
 This repository vendors and modifies two upstream code bases:
 
@@ -750,7 +377,7 @@ know the terms of the Sci-ZSEL code and the animal science benchmark.
 
 ---
 
-## 15. Citation
+## 7. Citation
 
 ```bibtex
 @inproceedings{khondokar2026scizsel,

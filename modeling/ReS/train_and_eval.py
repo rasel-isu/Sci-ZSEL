@@ -6,20 +6,27 @@ from utils import Logger, print_run_config
 from utils import CONFIG
 
 
+# Everything below comes from config.json -> "res": { ... }.
+# Valid "exp_list" entries (directories under datasets/<world>/res_format/<split>/):
+#   "(m1_e1)U(m3_e1)_multi_primeU(m4_e2)_multi_prime"                          Sci-ZSEL w/o filter
+#   "(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e"          Sci-ZSEL
+#   "synonym"                                                                  synonym baseline
+#   "synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e"  Sci-ZSEL + Synonym
+RES = CONFIG['res']
+
 exp_settings = [{
     'corpus_name' : CONFIG['world'],
     'onto_name' : CONFIG['kb_name'],
-    'split_name' :'train',
-    'use_title_during_testing' : True
+    'split_name' : RES.get('split_name', 'train'),
+    'use_title_during_testing' : RES.get('use_title_during_testing', True)
     }]
 
-lora = False
-exps = [
-    # {"synonym":None},
-    # {"(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e":None},
-    # {"(m1_e1)U(m3_e1)_multi_primeU(m4_e2)_multi_prime":None},
-    {"synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e":None},
-    ]
+lora = RES.get('lora', False)
+
+exp_list = RES.get('exp_list') or []
+if not exp_list:
+    raise ValueError('config.json: "res"."exp_list" is empty — nothing to train on')
+exps = [{name: None} for name in exp_list]
 
 os.makedirs("logs", exist_ok=True)
 start_time = time.time()

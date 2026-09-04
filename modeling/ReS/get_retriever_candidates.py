@@ -139,20 +139,20 @@ def copyanything(src, dst):
         
 def create_data_from_blink(onto):
 
-    split_name = 'train'
+    RES = CONFIG['res']
+    split_name = RES.get('split_name', 'train')
     ret_path = f'../'
     out_dir_root = f"../{CONFIG['data_dir']}/res_format/{split_name}/"
     # os.makedirs(f'{out_dir_root}/other_files/', exist_ok=True)
 
-    exps = {
-        'original_data':None,
-        # "(m1_e1)":'m1',
-        # "(m1_e1)U(m3_e1)U(m4_e2)":None,
-        # "(m1_e1)U(m3_e1)_multi_primeU(m4_e2)_multi_prime":None,
-        "(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e":None,
-        # "synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e":None,
-        # "synonym":None,
-        }
+    # 'original_data' produces the test set and is always needed; the training sets
+    # come from config.json -> "res"."exp_list".
+    exps = {'original_data': None}
+    exp_list = RES.get('exp_list') or []
+    if not exp_list:
+        raise ValueError('config.json: "res"."exp_list" is empty — nothing to convert')
+    for name in exp_list:
+        exps[name] = None
     
     # if onto =='bc5cdr':
     #     kb_file = f"kb/mesh_kb.json"
