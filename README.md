@@ -1,15 +1,7 @@
 # Sci-ZSEL
 
-**Bridging Lexical Divergence: LLM-Assisted, Cost-Efficient, Zero-shot Scientific Entity Linking**
-Md Rasel Khondokar, Qiao Qiao, Farjana Sultana Samia, Nhat Le, Yuepei Li, Qi Li
-*Findings of EMNLP 2026* — [arXiv:2609.00228](https://arxiv.org/abs/2609.00228)
-
-Sci-ZSEL fine-tunes a scientific entity linker **without any human annotation**. It (1) selects a small
-subset of ontology entities worth spending LLM calls on, (2) asks an LLM for aliases of only those
-entities, (3) removes aliases that semantically drift toward the entity's ontology neighbors, and
-(4) matches unlabeled corpus mentions against the surviving aliases to build pseudo-labeled
-mention–entity pairs. Those pairs fine-tune a bi-encoder retriever (BLINK) and a reranker
-(BLINK cross-encoder and/or ReS).
+**Bridging Lexical Divergence: LLM-Assisted, Cost-Efficient, Zero-shot Scientific Entity Linking**|
+*Findings of EMNLP 2026* | [arXiv:2609.00228](https://arxiv.org/abs/2609.00228)
 
 This repository reproduces the full pipeline end to end. The worked example throughout is
 **NCBI-Disease → MEDIC**, which is what `config.json` ships configured for.
