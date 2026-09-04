@@ -50,7 +50,7 @@ Sci-ZSEL-release/
 │   │   ├── blink/biencoder/        # retriever (train_biencoder.py, eval_biencoder.py)
 │   │   ├── blink/crossencoder/     # reranker (train_cross.py)
 │   │   ├── category_eval.py        # HO/MINT/LO/NO evaluation, recall@k, MRR
-│   │   └── scripts/*.sh            # the four entry points, described in §8
+│   │   └── scripts/                # entry points + load_config.sh (config.json -> shell vars)
 │   └── ReS/                        # vendored + modified HITsz-TMG/Read-and-Select reranker
 │       ├── get_retriever_candidates.py   # BLINK top-64 -> ReS input format
 │       ├── train_and_eval.py             # entry point (experiment list lives here)
@@ -89,6 +89,10 @@ Reference versions actually used: `sci-zsel` = Python 3.11.15 / torch 2.13.0+cu1
 `modeling/BLINK/requirements.txt` does not pin `torch` — it arrives as a dependency of
 `sentence-transformers`, so pin it yourself if you need bit-level reproducibility.
 
+**[Ollama](https://ollama.com) is required** — it serves the alias-generation LLM in step 5.2, and
+`data_preparation/alias_generation.sh` starts it, waits for it, and shuts it down. Install it before
+running the pipeline (§3). Steps 5.1, 5.3 and 5.4 do not need it.
+
 **External services / models downloaded at runtime:**
 
 - `bert-large-uncased` (Hugging Face) — retriever and cross-encoder backbone
@@ -112,15 +116,40 @@ bash install.sh
 `install.sh` creates both envs and installs `modeling/BLINK/requirements.txt` and
 `modeling/ReS/requirements.txt` respectively.
 
-You also need the **Ollama** binary on `PATH` (or referenced from
-`data_preparation/run_ollama_to_serve_llm`) and the alias model pulled once:
+### Ollama
+
+Alias generation (step 5.2) talks to a local **Ollama** server, so the `ollama` binary must be
+installed and on your `PATH`. Official instructions and downloads:
+**<https://ollama.com/download>** (source: <https://github.com/ollama/ollama>).
+
+On Linux with root:
 
 ```bash
-export OLLAMA_MODELS=/path/to/your/ollama/models
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+On a cluster without root, unpack the release tarball into a directory you own and add it to
+`PATH`:
+
+```bash
+mkdir -p ~/apps/ollama && cd ~/apps/ollama
+curl -fsSL https://ollama.com/download/ollama-linux-amd64.tgz | tar -xz
+export PATH="$HOME/apps/ollama/bin:$PATH"   # add to ~/.bashrc to make it stick
+ollama --version
+```
+
+Then pull the alias model once (~6.4 GB at fp16):
+
+```bash
+export OLLAMA_MODELS=/path/to/your/ollama/models   # big; keep it off your home quota
 export OLLAMA_HOST=127.0.0.1:11435
 ollama serve &
 ollama pull llama3.2:3b-instruct-fp16
 ```
+
+Point `data_preparation/run_ollama_to_serve_llm` at that same `OLLAMA_MODELS` directory (§4). That
+file is what the pipeline actually launches, so `ollama` must resolve on `PATH` when it runs — on a
+cluster, load the module or export the `PATH` line above in your job script.
 
 ---
 
@@ -302,12 +331,33 @@ path (`../config.json` from `data_preparation/`, `../../config.json` from `model
     "has_ent_alt_id": true,
     "exact_match_file": "m1_e1_unq_ents.json",
     "biencoder_top1_file": "top_1_from_biencoder.json",
+    "blink": {
+        "split_name": "train",
+        "base_models": {
+            "biencoder": "../saved_models/biencoder_wiki_large.bin",
+            "crossencoder": "../saved_models/crossencoder_wiki_large.bin"
+        },
+        "candidate_generation": { "top_k": 64, "max_context_length": 64, "...": "..." },
+        "retriever": {
+            "exp_list": ["synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e"],
+            "negative_selection": ["add_prch_in_pos_list"],
+            "seeds": [0], "epochs": 1, "train_batch_size": 64, "learning_rate": "2e-05", "...": "..."
+        },
+        "reranker": {
+            "exp_list": ["synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e"],
+            "negative_selection": "only_bienc_20_neg",
+            "seeds": [0], "epochs": 3, "train_batch_size": 16, "learning_rate": "2e-05", "...": "..."
+        }
+    },
     "res": {
         "pretrained_model": "../../saved_models/zeshel_disambiguation_attention.pt",
         "hf_model": "roberta-base"
     }
 }
 ```
+
+(`"..."` above stands in for the remaining hyperparameters — see the real file, or
+`scripts/load_config.sh`, which lists every key it reads together with its default.)
 
 | Key | Meaning |
 |---|---|
@@ -321,11 +371,17 @@ path (`../config.json` from `data_preparation/`, `../../config.json` from `model
 | `has_ent_alt_id` | Whether the ontology has an `altdiseaseid` list to expand during matching/scoring. |
 | `exact_match_file` | Filename for the E_EM entity set. |
 | `biencoder_top1_file` | Filename for the E_BT entity set. |
+| `blink.split_name` | Which split directory the BLINK scripts operate on (`train`). |
+| `blink.base_models.*` | Pretrained BLINK checkpoints, **relative to `data_preparation/`**. |
+| `blink.candidate_generation.*` | Flags for `eval_biencoder.py` (top-*k*, batch sizes, `bert_model`, `has_gt`). |
+| `blink.retriever.*` | Flags for `train_biencoder.py`. `exp_list` and `negative_selection` are arrays — every combination is run in turn. |
+| `blink.reranker.*` | Flags for `train_cross.py`. `exp_list` and `seeds` are arrays. |
 | `res.pretrained_model` | ReS checkpoint, **relative to `modeling/ReS/`**. |
 | `res.hf_model` | ReS backbone (`roberta-base`). |
 
-The `world` name also appears in the shell scripts as `ONTO=...` and in the ReS entry point — keep
-them in sync (see §11).
+The BLINK shell scripts read all of this through `modeling/BLINK/scripts/load_config.sh`, so
+`world` is never spelled out in a script. The ReS entry point still has its own experiment list —
+see §11.
 
 ---
 
@@ -394,11 +450,27 @@ bash res_reranker_fine_tuning.sh
 
 ### Knobs
 
+The BLINK scripts hold no settings of their own — they `source scripts/load_config.sh`, which parses
+`config.json` with `python3` and exports every path and hyperparameter. So one file drives all of it:
+
 | To change | Edit |
 |---|---|
-| Which pseudo-pair set to train on | `EXP_LIST` at the top of `retriever_fine_tuning.sh` and `blink_reranker_fine_tuning.sh`; `exps` in `ReS/train_and_eval.py:17` and `ReS/get_retriever_candidates.py:147` (all four already list the variants, commented out) |
-| Corpus / ontology | `config.json`, plus `ONTO` in the BLINK scripts — see §11 |
-| Seeds, epochs, batch size | `SEEDS` / `EPOCH` / `TRAIN_BATCH_SIZE` blocks in the BLINK scripts; `ReS/train_on_other_data.py` for ReS |
+| Corpus / ontology | `config.json` top level (`world`, `kb_name`, `kb_file`, `data_dir`, `saved_model_dir`) — see §11 |
+| Which pseudo-pair set to train on | `blink.retriever.exp_list` and `blink.reranker.exp_list` in `config.json`; `exps` in `ReS/train_and_eval.py:17` and `ReS/get_retriever_candidates.py:147` |
+| Seeds, epochs, batch size, lr, negative selection | `blink.retriever.*` / `blink.reranker.*` in `config.json`; `ReS/train_on_other_data.py` for ReS |
+| Candidate-generation top-*k*, batch sizes | `blink.candidate_generation.*` in `config.json` |
+| Pretrained checkpoint locations | `blink.base_models.*` in `config.json` (BLINK), `res.pretrained_model` (ReS) |
+
+The valid `exp_list` and `negative_selection` values are listed as comments at the top of
+`scripts/retriever_fine_tuning.sh`. Paths inside `config.json` are written relative to
+`data_preparation/`, i.e. `"../datasets/foo/"` means `<repo>/datasets/foo/`; the loader rewrites the
+leading `../` for scripts that run two levels deep. To try an alternative config without editing the
+committed one:
+
+```bash
+cd modeling/BLINK/
+CONFIG_FILE=../../my_config.json bash scripts/retriever_fine_tuning.sh
+```
 
 Defaults as shipped: retriever — 1 epoch, batch 64, lr 2e-5, `bi_enc_negative_selection=add_prch_in_pos_list`
 (ontology parents/children of the gold entity count as extra positives, scored against the whole KB).
@@ -411,11 +483,13 @@ Reference wall-clock on one A100-80GB for the 1,299-pair Sci-ZSEL set: alias gen
 
 ### Three things that will bite you
 
-1. `EXP_LIST` **defaults differ** between `retriever_fine_tuning.sh` (Sci-ZSEL) and
-   `blink_reranker_fine_tuning.sh` (Sci-ZSEL + Synonym). Set both to the same value.
-2. The reranker's candidates come from the **off-the-shelf** `biencoder_wiki_large.bin`, not the
-   retriever fine-tuned in 5.3 (`MODEL_PATH` in `scripts/get_biencoder_cands_for_reranker_training.sh`).
-   Point it at `$ROOT/saved_models/$ONTO/biencoder/train/$EXP/pytorch_model.bin` to couple the stages.
+1. `blink.retriever.exp_list` and `blink.reranker.exp_list` are **separate keys**. Keep them in sync
+   unless you deliberately want the two stages trained on different pseudo-pair sets.
+2. The reranker's candidates come from the **off-the-shelf** `biencoder_wiki_large.bin`
+   (`blink.base_models.biencoder`), not the retriever fine-tuned in 5.3 — the candidate-generation
+   script passes `--path_to_model $BIENCODER_BASE_MODEL`. To couple the stages, point that flag at
+   `$SAVED_MODEL_DIR/biencoder/$SPLITNAME/$EXP/pytorch_model.bin` in
+   `scripts/get_biencoder_cands_for_reranker_training.sh`.
 3. `*_entity_pool.t7` / `*_entity_encodings.t7` are reused blindly if present. **Delete them whenever
    you change the ontology**, or you will score against stale encodings with no warning.
 
@@ -537,11 +611,12 @@ To switch to another corpus/ontology:
    empty by design, and the pseudo-label quality report is skipped rather than crashing. Use
    `vt` / `qtl_vt` / `vt_kb.json` and `lpt` / `qtl_lpt` / `lpt_kb.json` for the other two ontologies.
 
-2. **Update the shell scripts.** In each of the four `modeling/BLINK/scripts/*.sh`, set `ONTO` /
-   `ONTO_LIST` to the new `world`, and update the four ontology-dependent paths in the
-   `if [ "$ONTO" = "ncbi_disease" ]` block — `CANDIDATE_ENCODINGS`, `CANDIDATE_POOL_PATH`,
-   `KB_FILE_PATH`, `GRAG_DATA_PATH`. The scripts `exit 1` on an unknown ontology, so add a branch
-   rather than editing the existing one if you want to keep both.
+2. **Nothing to change in the shell scripts.** `scripts/load_config.sh` derives every path from the
+   keys above: `KB_FILE_PATH` = `data_dir`/`kb_file`, `CANDIDATE_ENCODINGS` /
+   `CANDIDATE_POOL_PATH` = `saved_model_dir`/`<kb_name>_entity_{encodings,pool}.t7`, and `--onto` =
+   `world`. Note this also decouples the `--onto` tag from the directory name, which the older
+   hardcoded scripts conflated — needed for the QTL sets, where `world` is `cmo` but the directory
+   is `qtl_cmo`.
 
 3. **Check the Python `world` switches.** A new `world` string must be handled in:
    - `data_preparation/pseudo_pair_construction.py:199` — which ontology-relation loader to use

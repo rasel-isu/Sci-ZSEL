@@ -16,9 +16,9 @@ exp_settings = [{
 lora = False
 exps = [
     # {"synonym":None},
-    # {"synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e":None},
-    {"(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e":None},
+    # {"(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e":None},
     # {"(m1_e1)U(m3_e1)_multi_primeU(m4_e2)_multi_prime":None},
+    {"synonymU(m1_e1)U(m3_e1)_multi_prime_rm_sm_eU(m4_e2)_multi_prime_rm_sm_e":None},
     ]
 
 os.makedirs("logs", exist_ok=True)

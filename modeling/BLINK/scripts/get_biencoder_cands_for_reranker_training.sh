@@ -2,23 +2,24 @@ eval $(/lustre/hdd/LAS/qli-lab/rasel/apps/miniconda3/bin/conda shell.bash hook)
 source /lustre/hdd/LAS/qli-lab/rasel/apps/miniconda3/etc/profile.d/conda.sh
 conda activate sci-zsel
 
+# Usage: bash scripts/get_biencoder_cands_for_reranker_training.sh <experiment> <mode>
+#   <experiment>  a directory under datasets/<world>/blink_format/<split>/
+#   <mode>        train | test  (which *.jsonl to retrieve candidates for)
+# The corpus, ontology and all paths come from config.json.
+
 ROOT="../.."
-MODEL_PATH="$ROOT/saved_models/biencoder_wiki_large.bin"
-EXP="${1:?Usage: $0 <experiment_name>}"
-MODE="${2:?Usage: $0 <mode>}"
-SPLITNAME="train"
-ONTO="${3:?Usage: $0 <mode>}"
-ENTITY_DICT="$ROOT/datasets/$ONTO/blink_format/$SPLITNAME/$EXP/kb.jsonl"
-CANDIDATE_ENCODINGS="$ROOT/saved_models/$ONTO/medic_entity_encodings.t7"
-KB_FILE_PATH="$ROOT/datasets/$ONTO/medic.json"
-CANDIDATE_POOL_PATH="$ROOT/saved_models/$ONTO/medic_entity_pool.t7"
-GRAG_DATA_PATH="$ROOT/datasets/$ONTO/"
-DATA_PATH="$ROOT/datasets/$ONTO/blink_format/$SPLITNAME/$EXP"
-OUTPUT_DIR="$ROOT/saved_models/$ONTO/biencoder/$SPLITNAME/$EXP"
+source scripts/load_config.sh
+
+EXP="${1:?Usage: $0 <experiment_name> <mode>}"
+MODE="${2:?Usage: $0 <experiment_name> <mode>}"
+
+DATA_PATH="$DATA_DIR/blink_format/$SPLITNAME/$EXP"
+ENTITY_DICT="$DATA_PATH/kb.jsonl"
+OUTPUT_DIR="$SAVED_MODEL_DIR/biencoder/$SPLITNAME/$EXP"
 
 export PYTHONPATH=.
 python blink/biencoder/eval_biencoder.py \
---path_to_model $MODEL_PATH \
+--path_to_model $BIENCODER_BASE_MODEL \
 --entity_dict_path $ENTITY_DICT \
 --cand_encode_path $CANDIDATE_ENCODINGS \
 --cand_pool_path $CANDIDATE_POOL_PATH \
@@ -26,13 +27,12 @@ python blink/biencoder/eval_biencoder.py \
 --output_path $OUTPUT_DIR \
 --grag_data_path $GRAG_DATA_PATH \
 --kb_file_path $KB_FILE_PATH \
---onto $ONTO \
+--onto $WORLD \
 --experiment $EXP \
---max_context_length 64 \
---encode_batch_size 8 --eval_batch_size 32 \
---top_k 64 \
+--max_context_length $CG_MAX_CONTEXT_LENGTH \
+--encode_batch_size $CG_ENCODE_BATCH_SIZE --eval_batch_size $CG_EVAL_BATCH_SIZE \
+--top_k $CG_TOP_K \
 --save_topk_result \
---bert_model bert-large-uncased --mode $MODE \
+--bert_model $CG_BERT_MODEL --mode $MODE \
 --data_parallel \
---has_gt true \
-
+--has_gt $CG_HAS_GT \
