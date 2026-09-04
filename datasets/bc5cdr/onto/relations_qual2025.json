@@ -1,0 +1,1269 @@
+{
+ "Q000002": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030203",
+   "M0030204",
+   "M0030205",
+   "M0030206",
+   "M0030207",
+   "M0030208",
+   "M0030209",
+   "M0030210",
+   "M0030211"
+  ],
+  "parents": [
+   "Q000196"
+  ]
+ },
+ "Q000008": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030212"
+  ],
+  "parents": [
+   "Q000494",
+   "Q000627"
+  ]
+ },
+ "Q000009": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030213"
+  ],
+  "parents": [
+   "Q000494",
+   "Q000627"
+  ],
+  "children": [
+   "Q000506",
+   "Q000633"
+  ]
+ },
+ "Q000031": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030233",
+   "M0030235"
+  ],
+  "parents": [
+   "Q000737"
+  ]
+ },
+ "Q000032": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030237",
+   "M0030238",
+   "M0030239",
+   "M0030240"
+  ],
+  "children": [
+   "Q000097",
+   "Q000134",
+   "Q000302",
+   "Q000652"
+  ]
+ },
+ "Q000033": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030241",
+   "M0030242",
+   "M0030243",
+   "M0030244"
+  ],
+  "children": [
+   "Q000098",
+   "Q000166",
+   "Q000196",
+   "Q000294",
+   "Q000473"
+  ]
+ },
+ "Q000037": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030247",
+   "M0030248",
+   "M0030249"
+  ],
+  "parents": [
+   "Q000737",
+   "Q000494"
+  ]
+ },
+ "Q000096": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030287"
+  ],
+  "parents": [
+   "Q000378"
+  ]
+ },
+ "Q000097": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030288"
+  ],
+  "parents": [
+   "Q000032",
+   "Q000378"
+  ]
+ },
+ "Q000098": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030289",
+   "M0030290"
+  ],
+  "parents": [
+   "Q000033"
+  ]
+ },
+ "Q000134": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030318"
+  ],
+  "parents": [
+   "Q000032",
+   "Q000378"
+  ]
+ },
+ "Q000138": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030321"
+  ],
+  "parents": [
+   "Q000737"
+  ]
+ },
+ "Q000139": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030322"
+  ],
+  "parents": [
+   "Q000209"
+  ]
+ },
+ "Q000145": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030329",
+   "M0030330",
+   "M0030331"
+  ]
+ },
+ "Q000150": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030334",
+   "M0030335",
+   "M0030336",
+   "M0030337",
+   "M0030338",
+   "M0030340",
+   "M0030341"
+  ],
+  "parents": [
+   "Q000209"
+  ],
+  "children": [
+   "Q000556"
+  ]
+ },
+ "Q000151": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030343"
+  ],
+  "parents": [
+   "Q000209"
+  ]
+ },
+ "Q000166": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030350",
+   "M0030351",
+   "M0030352"
+  ],
+  "parents": [
+   "Q000033"
+  ],
+  "children": [
+   "Q000648"
+  ]
+ },
+ "Q000172": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030357"
+  ],
+  "parents": [
+   "Q000378"
+  ]
+ },
+ "Q000175": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030360",
+   "M0030362",
+   "M0030363",
+   "M0030364",
+   "M0030365"
+  ],
+  "children": [
+   "Q000000981"
+  ]
+ },
+ "Q000178": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030367"
+  ],
+  "parents": [
+   "Q000628"
+  ]
+ },
+ "Q000187": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030371"
+  ]
+ },
+ "Q000188": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030372"
+  ],
+  "parents": [
+   "Q000628"
+  ]
+ },
+ "Q000191": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030375",
+   "M0030376",
+   "M0030377",
+   "M0030378",
+   "M0030379",
+   "M0030380",
+   "M0030381",
+   "M0030382"
+  ],
+  "parents": [
+   "Q000458"
+  ]
+ },
+ "Q000193": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030384",
+   "M0030385",
+   "M0030386",
+   "M0030387"
+  ]
+ },
+ "Q000196": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030391",
+   "M0030392",
+   "M0030393",
+   "M0030394",
+   "M0030395"
+  ],
+  "children": [
+   "Q000002"
+  ],
+  "parents": [
+   "Q000033",
+   "Q000209"
+  ]
+ },
+ "Q000201": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030398",
+   "M0030399"
+  ],
+  "parents": [
+   "Q000378"
+  ]
+ },
+ "Q000208": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030405",
+   "M0030407",
+   "M0030408"
+  ],
+  "parents": [
+   "Q000453"
+  ]
+ },
+ "Q000209": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030410",
+   "M0030411"
+  ],
+  "children": [
+   "Q000139",
+   "Q000150",
+   "Q000151",
+   "Q000196",
+   "Q000235",
+   "Q000276",
+   "Q000382",
+   "Q000469",
+   "Q000635"
+  ]
+ },
+ "Q000235": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030426",
+   "M0030427"
+  ],
+  "parents": [
+   "Q000209",
+   "Q000502"
+  ]
+ },
+ "Q000254": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030446",
+   "M0030447",
+   "M0030448",
+   "M0030449",
+   "M0030450"
+  ],
+  "parents": [
+   "Q000502"
+  ]
+ },
+ "Q000266": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030460",
+   "M0030461"
+  ]
+ },
+ "Q000276": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030471"
+  ],
+  "parents": [
+   "Q000209",
+   "Q000502"
+  ]
+ },
+ "Q000293": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030486",
+   "M0030487"
+  ]
+ },
+ "Q000294": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030488"
+  ],
+  "parents": [
+   "Q000033"
+  ]
+ },
+ "Q000295": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030489",
+   "M0030490",
+   "M0030491",
+   "M0030492",
+   "M0030493",
+   "M0030494"
+  ]
+ },
+ "Q000302": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030500",
+   "M0030501",
+   "M0030502"
+  ],
+  "parents": [
+   "Q000032"
+  ]
+ },
+ "Q000331": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030527",
+   "M0030528",
+   "M0030529",
+   "M0030530",
+   "M0030531",
+   "M0030533",
+   "M0030534",
+   "M0030535",
+   "M0030536",
+   "M0030537",
+   "M0030538",
+   "M0030539",
+   "M0030540",
+   "M0030541"
+  ],
+  "parents": [
+   "Q000458"
+  ]
+ },
+ "Q000378": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030575",
+   "M0030576",
+   "M0030577",
+   "M0030578",
+   "M0030579",
+   "M0030583",
+   "M0030759"
+  ],
+  "children": [
+   "Q000096",
+   "Q000097",
+   "Q000134",
+   "Q000172",
+   "Q000201",
+   "Q000493",
+   "Q000652"
+  ],
+  "parents": [
+   "Q000502"
+  ]
+ },
+ "Q000379": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030584",
+   "M0030585"
+  ]
+ },
+ "Q000382": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030588",
+   "M0030592",
+   "M0030593"
+  ],
+  "parents": [
+   "Q000209"
+  ],
+  "children": [
+   "Q000821"
+  ]
+ },
+ "Q000401": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030609",
+   "M0030611",
+   "M0030612"
+  ],
+  "parents": [
+   "Q000453"
+  ]
+ },
+ "Q000451": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030646",
+   "M0030647"
+  ],
+  "parents": [
+   "Q000628"
+  ]
+ },
+ "Q000453": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030648",
+   "M0030649",
+   "M0030650",
+   "M0030651",
+   "M0030652",
+   "M0030653",
+   "M0030654",
+   "M0030655",
+   "M0030656",
+   "M0030657"
+  ],
+  "children": [
+   "Q000208",
+   "Q000401"
+  ],
+  "parents": [
+   "Q000706"
+  ]
+ },
+ "Q000458": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030662",
+   "M0030663",
+   "M0030664",
+   "M0030665",
+   "M0030666",
+   "M0030667"
+  ],
+  "children": [
+   "Q000191",
+   "Q000331",
+   "Q000592",
+   "Q000600",
+   "Q000639"
+  ]
+ },
+ "Q000469": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030677",
+   "M0030679",
+   "M0030680",
+   "M0030681",
+   "M0030682"
+  ],
+  "parents": [
+   "Q000209"
+  ]
+ },
+ "Q000472": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030684",
+   "M0030685"
+  ]
+ },
+ "Q000473": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030686",
+   "M0030687",
+   "M0030688",
+   "M0030689"
+  ],
+  "parents": [
+   "Q000033"
+  ]
+ },
+ "Q000493": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030695",
+   "M0030698",
+   "M0030701"
+  ],
+  "parents": [
+   "Q000494",
+   "Q000378"
+  ]
+ },
+ "Q000494": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030702",
+   "M0030703",
+   "M0030704"
+  ],
+  "children": [
+   "Q000008",
+   "Q000009",
+   "Q000037",
+   "Q000493",
+   "Q000819"
+  ]
+ },
+ "Q000502": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030706"
+  ],
+  "children": [
+   "Q000235",
+   "Q000254",
+   "Q000276",
+   "Q000378",
+   "Q000503"
+  ]
+ },
+ "Q000503": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030707"
+  ],
+  "parents": [
+   "Q000502"
+  ]
+ },
+ "Q000506": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030708",
+   "M0030709"
+  ],
+  "parents": [
+   "Q000009",
+   "Q000627"
+  ]
+ },
+ "Q000517": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030715",
+   "M0030716",
+   "M0030717"
+  ],
+  "parents": [
+   "Q000628"
+  ]
+ },
+ "Q000523": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030719",
+   "M0030720",
+   "M0030721",
+   "M0030722",
+   "M0030723",
+   "M0030724",
+   "M0030725",
+   "M0030726",
+   "M0030727"
+  ]
+ },
+ "Q000528": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030732"
+  ]
+ },
+ "Q000532": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030735",
+   "M0030736",
+   "M0030737"
+  ],
+  "parents": [
+   "Q000628"
+  ]
+ },
+ "Q000534": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030738"
+  ],
+  "parents": [
+   "Q000628"
+  ]
+ },
+ "Q000556": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030758"
+  ],
+  "parents": [
+   "Q000150"
+  ]
+ },
+ "Q000592": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030789",
+   "M0030790",
+   "M0030791"
+  ],
+  "parents": [
+   "Q000458"
+  ]
+ },
+ "Q000600": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030793",
+   "M0030794",
+   "M0030795"
+  ],
+  "parents": [
+   "Q000458",
+   "Q000706"
+  ]
+ },
+ "Q000601": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030796",
+   "M0030797",
+   "M0030798",
+   "M0030799"
+  ],
+  "parents": [
+   "Q000628"
+  ],
+  "children": [
+   "Q000637"
+  ]
+ },
+ "Q000627": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030820"
+  ],
+  "children": [
+   "Q000008",
+   "Q000009",
+   "Q000506"
+  ]
+ },
+ "Q000628": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030821"
+  ],
+  "children": [
+   "Q000178",
+   "Q000188",
+   "Q000451",
+   "Q000517",
+   "Q000532",
+   "Q000534",
+   "Q000601"
+  ]
+ },
+ "Q000633": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030825",
+   "M0030826",
+   "M0030827"
+  ],
+  "parents": [
+   "Q000009"
+  ]
+ },
+ "Q000635": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030829"
+  ],
+  "parents": [
+   "Q000209"
+  ]
+ },
+ "Q000637": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030830",
+   "M0030831"
+  ],
+  "parents": [
+   "Q000601"
+  ]
+ },
+ "Q000639": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030833",
+   "M0030834",
+   "M0030835"
+  ],
+  "parents": [
+   "Q000458"
+  ]
+ },
+ "Q000648": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030844"
+  ],
+  "parents": [
+   "Q000166"
+  ]
+ },
+ "Q000652": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030848",
+   "M0030849",
+   "M0030850"
+  ],
+  "parents": [
+   "Q000032",
+   "Q000378"
+  ]
+ },
+ "Q000662": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030860"
+  ]
+ },
+ "Q000706": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030890",
+   "M0030854",
+   "M0030892"
+  ],
+  "children": [
+   "Q000453",
+   "Q000600"
+  ]
+ },
+ "Q000737": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030905",
+   "M0030906",
+   "M0030907",
+   "M0030908",
+   "M0030909",
+   "M0030910"
+  ],
+  "children": [
+   "Q000031",
+   "Q000037",
+   "Q000138",
+   "Q000819"
+  ]
+ },
+ "Q000819": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030947"
+  ],
+  "parents": [
+   "Q000737",
+   "Q000494"
+  ]
+ },
+ "Q000821": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0030948",
+   "M0030949"
+  ],
+  "parents": [
+   "Q000382"
+  ]
+ },
+ "Q000941": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M0421311",
+   "M0421312"
+  ]
+ },
+ "Q000000981": {
+  "AllowableQualifier": [],
+  "EntryCombination": [],
+  "SeeRelated": [],
+  "HeadingMappedTo": [],
+  "IndexingInformation": [],
+  "PharmacologicalAction": [],
+  "Concept": [
+   "M000614856",
+   "M0030733",
+   "M0030734",
+   "M0030903",
+   "M0030904"
+  ],
+  "parents": [
+   "Q000175"
+  ]
+ }
+}
