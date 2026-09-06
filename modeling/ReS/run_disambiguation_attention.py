@@ -253,7 +253,7 @@ def evaluate_test_as_val(epoch, model, tokenizer, device, args, logger):
     args.batch = 32
     dev_data_loader = get_attention_mention_loader(dev_data, dev_entities, tokenizer, False, True, args)
     val_pred, val_acc, _ = evaluate_and_same_predictions(args, model, tokenizer, dev_data_loader, device, logger)
-    pred_dir = args.out_dir + f"/{epoch}/"
+    pred_dir = args.out_dir + f"/epoch_{epoch}/"
     os.makedirs(pred_dir, exist_ok=True)
     pred_file = pred_dir + 'pred.json'
     with open(pred_file, 'w') as f: 
@@ -371,7 +371,7 @@ def train(samples_train, samples_dev, args):
             epoch_start_time = datetime.now()
             epoch_train_start_time = datetime.now()
 
-            epoch_dir = args.out_dir + f"/{epoch}/"
+            epoch_dir = args.out_dir + f"/epoch_{epoch}/"
 
             if args.do_eval_only_each_epoch:
                 model = ExtractInfoEncoder(args.transformer_model, device, args)

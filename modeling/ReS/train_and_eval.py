@@ -1,3 +1,25 @@
+# --- Silence the NumPy 1.x/2.x mismatch noise from torch -------------------
+# torch 2.0.1 was compiled against NumPy 1.x but the env has NumPy 2.x, so the
+# first torch<->numpy call prints a banner + traceback straight to sys.stderr
+# (not via the warnings module, so -W/PYTHONWARNINGS cannot suppress it) plus a
+# "Failed to initialize NumPy" UserWarning. Torch caches the result of that
+# probe, so we force it once here with stderr swallowed; every later call is
+# then silent. Note: this only hides the message -- torch<->numpy conversion
+# (tensor.numpy(), torch.from_numpy()) stays unavailable.
+import contextlib
+import io as _io
+import warnings
+
+warnings.filterwarnings("ignore", message="Failed to initialize NumPy")
+with contextlib.redirect_stderr(_io.StringIO()):
+    try:
+        import torch
+
+        torch.zeros(1).numpy()
+    except Exception:
+        pass
+# --------------------------------------------------------------------------
+
 from datetime import datetime
 import os
 import time
