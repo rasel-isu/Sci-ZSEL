@@ -391,6 +391,19 @@ know the terms of the Sci-ZSEL code and the animal science benchmark.
 
 ## 7. Citation
 
+The paper is currently an arXiv preprint. This is the entry Google Scholar generates:
+
+```bibtex
+@article{khondokar2026bridging,
+  title={Bridging Lexical Divergence: LLM-Assisted, Cost-Efficient, Zero-shot Scientific Entity Linking},
+  author={Khondokar, Md Rasel and Qiao, Qiao and Samia, Farjana Sultana and Le, Nhat and Li, Yuepei and Li, Qi},
+  journal={arXiv preprint arXiv:2609.00228},
+  year={2026}
+}
+```
+<!-- 
+Once the proceedings are out, cite the venue version instead:
+
 ```bibtex
 @inproceedings{khondokar2026scizsel,
   title     = {Bridging Lexical Divergence: LLM-Assisted, Cost-Efficient, Zero-shot Scientific Entity Linking},
@@ -402,4 +415,4 @@ know the terms of the Sci-ZSEL code and the animal science benchmark.
   primaryClass  = {cs.CL},
   url       = {https://arxiv.org/abs/2609.00228}
 }
-```
+``` -->
