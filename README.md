@@ -384,7 +384,7 @@ via Ollama for alias generation — check each model's own license before redist
 Ontologies (MEDIC, MeSH, CMO, VT, LPT) are redistributed under their respective terms; consult the
 issuing organizations for reuse conditions.
 
-No `LICENSE` file has been added to this repository yet — add one before release so downstream users
+No `LICENSE` file has been added to this repository yet, We will add one before release so downstream users
 know the terms of the Sci-ZSEL code and the animal science benchmark.
 
 ---
