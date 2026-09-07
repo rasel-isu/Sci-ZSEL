@@ -8,11 +8,11 @@
 |---|---|---|---|---|---|---|
 | `datasets/ncbi_disease/` | NCBI-Disease | MEDIC (`medic.json`) | 5,145 | 960 | 13,316 | yes |
 | `datasets/bc5cdr/` | BC5CDR | MeSH (`mesh.json`) | 9,285 | 9,654 | 355,213 | yes |
-| `datasets/qtl_cmo/` | Animal science (QTL) | CMO (`cmo_kb.json`) | 16,385 | 2,032 | 4,133 | **no** |
-| `datasets/qtl_vt/` | Animal science (QTL) | VT (`vt_kb.json`) | 16,385 | 1,688 | 4,044 | **no** |
-| `datasets/qtl_lpt/` | Animal science (QTL) | LPT (`lpt_kb.json`) | 16,385 | 722 | 520 | **no** |
+| `datasets/cmo/` | Animal science (QTL) | CMO (`cmo_kb.json`) | 16,385 | 2,032 | 4,133 | **no** |
+| `datasets/vt/` | Animal science (QTL) | VT (`vt_kb.json`) | 16,385 | 1,688 | 4,044 | **no** |
+| `datasets/lpt/` | Animal science (QTL) | LPT (`lpt_kb.json`) | 16,385 | 722 | 520 | **no** |
 
-The three `qtl_*` directories are the **new animal science benchmark** released with the paper. They
+The three animal-science directories (`cmo/`, `vt/`, `lpt/`) are the **new benchmark** released with the paper. They
 share one unlabeled 16,385-mention training corpus (`ground_truth: []` — this is the
 zero-human-annotation setting the method targets) and have one annotated test set per livestock
 trait ontology. Set `has_ground_truth: false` in `config.json` for these (see [`config.json` reference](../README.md#3-configjson-reference)).

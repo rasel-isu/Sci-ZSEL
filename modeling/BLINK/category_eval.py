@@ -1467,7 +1467,22 @@ def biencoder_eval_report(params,bi_pred_file):
             }
             converted.append(d)
 
-        
+        # Unlabeled splits (the QTL train corpora ship with ground_truth == [])
+        # have nothing to score against: MultiGTEvaluation would build an empty
+        # not_none_data and calculate_mrr would divide by zero. Write a note
+        # instead of metrics. This is per-split and data-driven on purpose --
+        # config's has_gt is per-corpus, so it would also skip the labeled
+        # test split of the same corpus.
+        if not any(d['ground_truth'] for d in converted):
+            report = (f'Bi-Encoder\n{"_"*20}\n'
+                      f'No ground truth in the "{params["mode"]}" split '
+                      f'({len(converted)} mentions) - evaluation skipped.\n'
+                      f'Candidates were still written to {bi_pred_file}.\n{"_"*20}')
+            with open(f"{bi_pred_file.replace('.json', '_eval.txt')}", 'w') as f:
+                f.write(report)
+            print(report)
+            return
+
         with open(f'{params["kb_file_path"]}') as f:
             exact_kb = json.load(f)
         eval_bi = MultiGTEvaluation(converted, exact_kb, 'retriever_predictions', multiple_gt_grag, for_retrieval=True)

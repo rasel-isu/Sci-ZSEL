@@ -16,6 +16,15 @@ therefore emits the entire flag or nothing (`CG_HAS_GT_FLAG`), driven by
 `blink.candidate_generation.has_gt` (which defaults to the top-level `has_ground_truth`). Watch for
 this if you add other `type=bool` flags.
 
+**`has_gt` is per-corpus, but "does this split have labels" is per-split.** Setting
+`has_ground_truth: false` for a QTL world is right for `get_biencoder_top_k.sh`, which reads the
+unlabeled raw train corpus. It is wrong for reranker candidate generation, whose inputs are the
+pseudo-labeled training set and the annotated test set. With the flag off there,
+`nn_prediction.py` skips the connected-candidate (ontology parent/child) block, leaving
+`connected_candidates_graph` empty while `context_vecs` is full, and `train_cross.py` dies with
+`IndexError: list index out of range` in `modify_list`. That is why
+`get_biencoder_cands_for_reranker_training.sh` passes `--has_gt true` unconditionally.
+
 **Ollama port 11435 is hard-coded in two places** — `run_ollama_to_serve_llm` (`OLLAMA_HOST`) and
 `alias_generation.py::LLMSelector.get_ollama` (`base_url`). `alias_generation.sh` polls
 `http://127.0.0.1:11435/api/tags` until the server answers and kills the whole process group on

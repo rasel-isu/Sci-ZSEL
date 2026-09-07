@@ -6,6 +6,15 @@ conda activate sci-zsel
 #   <experiment>  a directory under datasets/<world>/blink_format/<split>/
 #   <mode>        train | test  (which *.jsonl to retrieve candidates for)
 # The corpus, ontology and all paths come from config.json.
+#
+# --has_gt is forced on here rather than taken from $CG_HAS_GT_FLAG. That flag
+# reflects config.json's has_ground_truth, which describes the RAW corpus, but
+# both call sites of this script feed labeled data: "original_data test" is the
+# annotated test set, and "<exp> train" is the pseudo-labeled training set built
+# by data_preparation/. Without it, nn_prediction.py skips the connected-candidate
+# (ontology parent/child) block and train_cross.py dies with an IndexError on the
+# empty list. Corpora whose raw train split is unlabeled (the QTL worlds) still
+# get has_gt=false in get_biencoder_top_k.sh, which is the step that reads it.
 
 ROOT="../.."
 source scripts/load_config.sh
@@ -35,4 +44,4 @@ python blink/biencoder/eval_biencoder.py \
 --save_topk_result \
 --bert_model $CG_BERT_MODEL --mode $MODE \
 --data_parallel \
-$CG_HAS_GT_FLAG
+--has_gt true

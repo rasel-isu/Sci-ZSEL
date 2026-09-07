@@ -193,13 +193,13 @@ path (`../config.json` from `data_preparation/`, `../../config.json` from `model
 | `data_dir` | Corpus directory, **relative to `data_preparation/`**. |
 | `saved_model_dir` | Output root for this world, **relative to `data_preparation/`**. |
 | `synonym_key_on_ontology` | Which ontology key holds curated synonyms (`synonyms`, or `synonym` for raw MeSH). |
-| `has_ground_truth` | `false` for the QTL training corpora. When `false`, pseudo-label quality reporting is skipped instead of crashing on empty `ground_truth`. |
+| `has_ground_truth` | `false` for the QTL training corpora (`cmo`, `vt`, `lpt`), whose 16,385-mention train split ships with `ground_truth: []`. When `false`, pseudo-label quality reporting is skipped instead of crashing on empty `ground_truth`. Independently of this flag, `biencoder_eval_report` skips any split it finds no labels in and writes a short note to `*_eval.txt` in place of MRR/recall — that check is on the data, not on the config, so the *labeled* test split of an unlabeled corpus is still scored normally. |
 | `has_ent_alt_id` | Whether the ontology has an `altdiseaseid` list to expand during matching/scoring. |
 | `exact_match_file` | Filename for the E_EM entity set. |
 | `biencoder_top1_file` | Filename for the E_BT entity set. |
 | `blink.split_name` | Which split directory the BLINK scripts operate on (`train`). |
 | `blink.base_models.*` | Pretrained BLINK checkpoints, **relative to `data_preparation/`**. |
-| `blink.candidate_generation.*` | Flags for `eval_biencoder.py` (top-*k*, batch sizes, `bert_model`). `has_gt` defaults to the top-level `has_ground_truth`; when false the `--has_gt` flag is omitted entirely rather than passed as `false` — see [Troubleshooting](docs/troubleshooting.md). |
+| `blink.candidate_generation.*` | Flags for `eval_biencoder.py` (top-*k*, batch sizes, `bert_model`). `has_gt` defaults to the top-level `has_ground_truth`; when false the `--has_gt` flag is omitted entirely rather than passed as `false` — see [Troubleshooting](docs/troubleshooting.md). It reaches only `get_biencoder_top_k.sh`, the step that reads the raw (possibly unlabeled) corpus; `get_biencoder_cands_for_reranker_training.sh` hard-codes `--has_gt true`, because both of its inputs — the annotated test set and the pseudo-labeled training set — always carry labels. |
 | `blink.retriever.*` | Flags for `train_biencoder.py`. `exp_list` and `negative_selection` are arrays — every combination is run in turn. |
 | `blink.reranker.*` | Flags for `train_cross.py`. `exp_list` and `seeds` are arrays. |
 | `res.pretrained_model` | ReS checkpoint, **relative to `modeling/ReS/`**. |
@@ -279,7 +279,8 @@ bash res_reranker_fine_tuning.sh
 
 ### Knobs
 
-Neither the BLINK scripts nor the ReS entry points hold settings of their own. The BLINK scripts
+With one exception, neither the BLINK scripts nor the ReS entry points hold settings of their own
+(the exception is `--has_gt` in `get_biencoder_cands_for_reranker_training.sh`, noted in §3). The BLINK scripts
 `source scripts/load_config.sh`, which parses `config.json` with `python3` and exports every path
 and hyperparameter; the ReS modules read `CONFIG['res']` directly. So one file drives all of it:
 
@@ -341,6 +342,11 @@ Mind the off-by-one in `epoch_<i>`: the BLINK retriever and reranker number thei
 heading, is the off-the-shelf (non-fine-tuned) bi-encoder that generated the candidates the
 reranker was fed — it is a retrieval baseline, not a reranker score. Read the numbers under the
 `Cross-Encoder` heading for the actual BLINK reranker result.
+
+For a split with no labels — the QTL train corpora — there is nothing to score, so the matching
+`*_eval.txt` holds `No ground truth in the "train" split (N mentions) - evaluation skipped.`
+instead of metrics. The candidates themselves are still written, and the annotated test split of
+the same corpus is scored as usual.
 
 Each reports MRR and recall@{1,5,…,64} overall and per lexical-overlap category, e.g.:
 

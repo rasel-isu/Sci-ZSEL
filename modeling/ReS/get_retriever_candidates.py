@@ -143,7 +143,7 @@ def create_data_from_blink(onto):
     split_name = RES.get('split_name', 'train')
     ret_path = f'../'
     out_dir_root = f"../{CONFIG['data_dir']}/res_format/{split_name}/"
-    # os.makedirs(f'{out_dir_root}/other_files/', exist_ok=True)
+    os.makedirs(f'{out_dir_root}/other_files/', exist_ok=True)
 
     # 'original_data' produces the test set and is always needed; the training sets
     # come from config.json -> "res"."exp_list".
@@ -154,17 +154,6 @@ def create_data_from_blink(onto):
     for name in exp_list:
         exps[name] = None
     
-    # if onto =='bc5cdr':
-    #     kb_file = f"kb/mesh_kb.json"
-    #     copyanything(f'{ret_path}data/{onto}/onto/', f'{out_dir_root}/other_files')
-    # elif onto =='ncbi':
-    #     kb_file = f"kb/medic_kb.json"
-    #     copyanything(f'{ret_path}data/{onto}/onto/', f'{out_dir_root}/other_files')
-    # elif onto in ['cmo', 'vt', 'lpt']:
-
-    # copyanything(f'{ret_path}datasets/{onto}/', f'{out_dir_root}/other_files')
-
-     
     with open(f"../{CONFIG['data_dir']}/{CONFIG['kb_file']}", 'r') as f:
         ents = json.load(f)
 
@@ -179,7 +168,6 @@ def create_data_from_blink(onto):
     with open(kb_file, 'w') as f:
         json.dump(res_ent, f, indent=1)
     
-    # shutil.copy2(f'{ret_path}datasets/{onto}/test_grag.json', f'{out_dir_root}/other_files/test_grag.json')
 
     for exp in exps:
         out_dir = f"{out_dir_root}{exp}/"
