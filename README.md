@@ -31,6 +31,7 @@ Details live in [`docs/`](docs/):
 | [Pretrained checkpoints](docs/checkpoints.md) | Download commands for the three model files |
 | [Data](docs/data.md) | What ships, corpus/ontology formats, generated intermediates |
 | [Experiment names](docs/experiment-names.md) | Decoding `(m1_e1)U(m3_e1)_multi_prime_rm_sm_e...` and the HO/MINT/LO/NO categories |
+| [Settings and results](docs/results.md) | The four training settings and the exact result file for each stage |
 | [LLM cost accounting](docs/llm-cost.md) | Tokens and wall clock spent on alias generation |
 | [Troubleshooting](docs/troubleshooting.md) | Known quirks and how they fail |
 
@@ -335,6 +336,9 @@ Reference wall-clock on one A100-80GB for the 1,299-pair Sci-ZSEL set: alias gen
 | Retriever | `saved_models/<world>/biencoder/train/<exp>/epoch_<i>/top64_candidates/test_eval.txt` |
 | BLINK reranker | `saved_models/<world>/crossencoder/train/fine-tune/seed-<s>/<exp>/epoch_<i>/crossencoder_predictions_eval.txt` |
 | ReS reranker | `saved_models/<world>/res/<world>/train/seed-<s>/<exp>/<world>_<exp>/epoch_<i>/pred_eval.txt` |
+
+[Settings and results](docs/results.md) maps each of the four training settings to these paths,
+with a worked example.
 
 Mind the off-by-one in `epoch_<i>`: the BLINK retriever and reranker number their epoch directories from `epoch_0`, while ReS numbers from `epoch_1` — so after a 3-epoch run the last BLINK directory is `epoch_2` but the last ReS one is `epoch_3`.
 
